@@ -6,7 +6,9 @@ import (
 	"database/sql"
 	"encoding/json"
 	"log"
-	_ "github.com/mattn/go-sqlite3"
+	"go-sqlite/db"
+	"strconv"
+	
 )
 
 type Task struct{
@@ -16,48 +18,176 @@ type Task struct{
 }
 
 func main(){
-	db, err := sql.Open("sqlite3", "./test.db")
-	if err!=nil{
-		log.Fatal(err)
-	}
-	defer db.Close();
+	// db, err := sql.Open("sqlite3", "./test.db")
+	// if err!=nil{
+	// 	log.Fatal(err)
+	// }
+	// defer db.Close();
 
-	query := `CREATE TABLE IF NOT EXISTS tasks(
-	     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-		 name TEXT ,
-		 status TEXT
+	// query := `CREATE TABLE IF NOT EXISTS tasks(
+	//      id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+	// 	 name TEXT ,
+	// 	 status TEXT
 	
-	);`
+	// );`
 
-	_,err = db.Exec(query)
+	// _,err = db.Exec(query)
 
-	if err!=nil{
-		log.Fatal(err)
-	}
-	log.Println("table creates succesfully")
+	// if err!=nil{
+	// 	log.Fatal(err)
+	// }
+	// log.Println("table creates succesfully")
+
+  dbconn := db.Dbinit()
+
+  defer dbconn.Close()
+	
 
 	// to insert a task into database
-	http.HandleFunc("/insert",InsertTask(db))
+	http.HandleFunc("/insert",InsertTask(dbconn))
 
 	// to get the all tasks from database
-	http.HandleFunc("/getall",GetAll(db))
+	http.HandleFunc("/getall",GetAll(dbconn))
 
 	//to get one task by id 
-	http.HandleFunc("/get",gettask(db))
+	http.HandleFunc("/get",gettask(dbconn))
 
 	// to rename the task by id 
-	http.HandleFunc("/rename",RenameTask(db))
+	http.HandleFunc("/rename",RenameTask(dbconn))
 
 	//to change the status of the task
-	http.HandleFunc("/ChangeStatus",ChangeStatus(db))
+	http.HandleFunc("/ChangeStatus",ChangeStatus(dbconn))
 
 	//to delete the task from the table 
-	http.HandleFunc("/delete",DeleteTask(db))
+	http.HandleFunc("/delete",DeleteTask(dbconn))
 
 	//delete the task which are done 
-	http.HandleFunc("/DeleteCompletedTask",DeleteCompletedTask(db))
+	http.HandleFunc("/DeleteCompletedTask",DeleteCompletedTask(dbconn))
+
+	//inserting the multiple task into the datbase
+	http.HandleFunc("/insertmany",Insertmany(dbconn))
+
+	//show the task by the page (pagination concept)
+	http.HandleFunc("/showtask",ShowTask(dbconn))
+
+	//pagination by cursor 
+	http.HandleFunc("/viewtask",ViewTask(dbconn))
 
 	http.ListenAndServe(":8080", nil)
+}
+
+
+func ViewTask(db *sql.DB) http.HandlerFunc{
+	return func(w http.ResponseWriter , r *http.Request){
+
+		  limitstr := r.URL.Query().Get("limit")
+		  afterindestr := r.URL.Query().Get("afterind")
+
+		  limit,_:= strconv.Atoi(limitstr)
+		  afterind,_ := strconv.Atoi(afterindestr)
+
+		  rows, err := db.Query("SELECT * FROM tasks WHERE id > ? LIMIT  ?" ,afterind,limit)
+		  if err!=nil{
+			log.Println("error in fetching the parameters")
+		  }
+ defer rows.Close()
+
+		  var list []Task
+
+		  for rows.Next(){
+               var task Task
+			   err := rows.Scan(&task.ID,&task.NAME,&task.STATUS)
+
+			   if err!=nil{
+				log.Println("wrong in the scanning the data from the rows ")
+			   }
+
+			   list = append(list,task)
+		  }
+
+      json.NewEncoder(w).Encode(list)
+
+	}
+
+
+}
+
+func ShowTask(db *sql.DB) http.HandlerFunc{
+	return func(w http.ResponseWriter, r *http.Request){
+
+	   limitstr:= r.URL.Query().Get("limit")
+	   pagenostr:= r.URL.Query().Get("pageno")
+
+	   limit,_:=strconv.Atoi(limitstr)
+	   pageno,_ := strconv.Atoi(pagenostr)
+       
+	    if limit < 1{
+			limit=1
+		}
+		if pageno <1{
+			pageno=1
+		}
+		offset := (pageno-1)*limit;
+
+		rows ,err := db.Query("SELECT * FROM tasks LIMIT ? OFFSET ?",limit,offset)
+
+		if err!=nil{
+			log.Println("error in the data fetching")
+
+		}
+
+		var list []Task
+
+		for rows.Next(){
+			var task Task
+			err := rows.Scan(&task.ID,&task.NAME,&task.STATUS)
+
+			if err!=nil{
+				log.Println("somthing went wrong in fetching the data")
+			}
+			list = append(list , task)
+		}
+		json.NewEncoder(w).Encode(list)
+
+	}
+}
+
+
+
+func Insertmany(db *sql.DB) http.HandlerFunc{
+	return func( w http.ResponseWriter, r *http.Request){
+		tx, err := db.Begin()
+		if err != nil{
+			log.Fatal(err)
+		}
+		stmt,err := tx.Prepare("INSERT INTO tasks(name,status) VALUES(?,?)")
+		if err!=nil{
+			log.Fatal(err)
+		}
+		defer stmt.Close()
+
+		for i:=1;i<=10000;i++{
+			name:= "Task"+ strconv.Itoa(i)
+			status := "pending"
+			if i%2==0{
+				status="Done"
+			}
+			_,err := stmt.Exec(name,status)
+			if err!=nil{
+				log.Println("error in the data inserting ")
+			}
+		}
+  
+		err = tx.Commit()
+		if err!=nil{
+			log.Fatal(err)
+		}
+
+		json.NewEncoder(w).Encode(map[string]string{
+		"message":"the data inserted in the database succesfully",
+	})
+
+	}
 }
 
 func DeleteCompletedTask(db *sql.DB) http.HandlerFunc{
