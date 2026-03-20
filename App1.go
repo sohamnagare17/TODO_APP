@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"log"
+	"os"
 	"go-sqlite/db"
 	"strconv"
 	
@@ -18,30 +19,20 @@ type Task struct{
 }
 
 func main(){
-	// db, err := sql.Open("sqlite3", "./test.db")
-	// if err!=nil{
-	// 	log.Fatal(err)
-	// }
-	// defer db.Close();
-
-	// query := `CREATE TABLE IF NOT EXISTS tasks(
-	//      id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-	// 	 name TEXT ,
-	// 	 status TEXT
 	
-	// );`
-
-	// _,err = db.Exec(query)
-
-	// if err!=nil{
-	// 	log.Fatal(err)
-	// }
-	// log.Println("table creates succesfully")
-
   dbconn := db.Dbinit()
 
   defer dbconn.Close()
-	
+
+
+	file , err := os.OpenFile("app.log",os.O_CREATE|os.O_WRONLY|os.O_APPEND,0666)
+
+	if err!=nil{
+		log.Fatal(err)
+	}
+     defer file.Close()
+
+    log.SetOutput(file)
 
 	// to insert a task into database
 	http.HandleFunc("/insert",InsertTask(dbconn))
@@ -334,24 +325,24 @@ func InsertTask(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request){
         var newtask Task;
 
-		 err := json.NewDecoder(r.Body).Decode(&newtask)
+		err := json.NewDecoder(r.Body).Decode(&newtask)
 
-		 if err!=nil{
-			log.Println("error in fetching the data")
-		 }
+		if err!=nil{
+		log.Println("error in fetching the data")
+		}
 
-		 query := `INSERT INTO tasks (name , status) VALUES(?,?)`
+		query := `INSERT INTO tasks (name , status) VALUES(?,?)`
 
-		 _, err = db.Exec(query,newtask.NAME,newtask.STATUS)
+		_, err = db.Exec(query,newtask.NAME,newtask.STATUS)
 
-		 if err != nil{
-			log.Println("somthing went wrong to inserting the data ")
-			return 
-		 }
+		if err != nil{
+		log.Println("somthing went wrong to inserting the data ")
+		return 
+		}
 
-	     json.NewEncoder(w).Encode(map[string]string{
-			"message":"the task inserted succesfully into database ",
-		 })
+		json.NewEncoder(w).Encode(map[string]string{
+		"message":"the task inserted succesfully into database ",
+		})
 
 	}
 }
