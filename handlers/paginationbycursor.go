@@ -17,8 +17,16 @@ func ViewTask(db *sql.DB) http.HandlerFunc{
 		  limitstr := r.URL.Query().Get("limit")
 		  afterindestr := r.URL.Query().Get("afterind")
 
-		  limit,_:= strconv.Atoi(limitstr)
-		  afterind,_ := strconv.Atoi(afterindestr)
+		  limit,err:= strconv.Atoi(limitstr)
+          if err!=nil{
+			 log.Println("plz provide valid limit value")
+		  }
+
+		  afterind,err1:= strconv.Atoi(afterindestr)
+
+		  if err1!=nil{
+			log.Println("plz provide valid after index value")
+		  }
 
 		  rows, err := db.Query("SELECT * FROM tasks WHERE id > ? LIMIT  ?" ,afterind,limit)
 		  if err!=nil{
