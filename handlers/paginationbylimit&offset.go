@@ -16,8 +16,16 @@ func ShowTask(db *sql.DB) http.HandlerFunc{
 	   limitstr:= r.URL.Query().Get("limit")
 	   pagenostr:= r.URL.Query().Get("pageno")
 
-	   limit,_:=strconv.Atoi(limitstr)
-	   pageno,_ := strconv.Atoi(pagenostr)
+	   limit,err:=strconv.Atoi(limitstr)
+	     if err!=nil{
+			 log.Println("plz provide valid limit value")
+		  }
+		  
+	   pageno,err1:= strconv.Atoi(pagenostr)
+		  if err1!=nil{
+			log.Println("plz provide valid after index value")
+		  }
+
        
 	    if limit < 1{
 			limit=1

@@ -5,6 +5,7 @@ package handlers
 		"net/http"
 		"log"
 	"database/sql"
+	"strconv"
 		
   )
 
@@ -27,9 +28,9 @@ idstr := r.URL.Query().Get("id")
 		query :=`DELETE FROM tasks
 		        WHERE id=?`
 
-		_,err := db.Exec(query,id)
+		_,err1 := db.Exec(query,id)
 		
-		if err!=nil{
+		if err1!=nil{
 			log.Println("error while deleting the task")
 			return 
 		}

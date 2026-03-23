@@ -5,6 +5,7 @@ package handlers
 		"log"
 	"database/sql"
 		"go-sqlite/models"
+		"strconv"
   )
 
 func gettask(db *sql.DB) http.HandlerFunc{
@@ -18,7 +19,7 @@ func gettask(db *sql.DB) http.HandlerFunc{
 		return
 	 }
 
-	 id,err := strconv.Atoi(idstr)
+	 id,err:= strconv.Atoi(idstr)
 	 if err!=nil{
 		log.Println("id must be number ")
 		return
@@ -26,9 +27,9 @@ func gettask(db *sql.DB) http.HandlerFunc{
 
 	 query := `SELECT id,name,status FROM tasks where id=?`
 
-	 err:= db.QueryRow(query,id).Scan(&task.ID,&task.NAME,&task.STATUS)
+	 err1:= db.QueryRow(query,id).Scan(&task.ID,&task.NAME,&task.STATUS)
 
-	 if err!=nil{
+	 if err1!=nil{
 		log.Println("error in fetching the data");
 		return 
 	 }

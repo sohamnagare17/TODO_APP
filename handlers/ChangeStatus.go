@@ -5,7 +5,7 @@
 		"net/http"
 		"log"
 	"database/sql"
-		
+		"strconv"
   )
 
 func ChangeStatus(db *sql.DB) http.HandlerFunc{
@@ -32,9 +32,9 @@ func ChangeStatus(db *sql.DB) http.HandlerFunc{
 				  WHERE id=?
 				  `
 
-	   _,err := db.Exec(query,id)
+	   _,err1 := db.Exec(query,id)
 	   
-	   if err!=nil{
+	   if err1!=nil{
 		 log.Println("error in update  the status")
 		 return 
 	   }
