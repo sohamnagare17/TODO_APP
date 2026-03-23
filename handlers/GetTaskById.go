@@ -13,6 +13,17 @@ func gettask(db *sql.DB) http.HandlerFunc{
 
 	 idstr := r.URL.Query().Get("id")
 
+	 if idstr==""{
+		log.Println("Id is required plz provide id")
+		return
+	 }
+
+	 id,err := strconv.Atoi(idstr)
+	 if err!=nil{
+		log.Println("id must be number ")
+		return
+	 }
+
 	 query := `SELECT id,name,status FROM tasks where id=?`
 
 	 err:= db.QueryRow(query,id).Scan(&task.ID,&task.NAME,&task.STATUS)
