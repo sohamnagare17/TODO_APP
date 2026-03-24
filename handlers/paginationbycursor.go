@@ -46,8 +46,17 @@ func ViewTask(db *sql.DB) http.HandlerFunc{
 
 			   list = append(list,task)
 		  }
+          nextcursor := afterind
+		  if (len(list)>0){
+			nextcursor = list[len(list)-1].ID
+		  }
 
-      json.NewEncoder(w).Encode(list)
+      json.NewEncoder(w).Encode(map[string]interface{}{
+		"list:":list,
+		"next_cursor":nextcursor,
+		"has_more":len(list)==limit,
+		"afterind":afterind,
+	  })
 
 	}
 
