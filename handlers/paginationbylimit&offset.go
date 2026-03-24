@@ -20,7 +20,7 @@ func ShowTask(db *sql.DB) http.HandlerFunc{
 	     if err!=nil{
 			 log.Println("plz provide valid limit value")
 		  }
-		  
+
 	   pageno,err1:= strconv.Atoi(pagenostr)
 		  if err1!=nil{
 			log.Println("plz provide valid after index value")
@@ -53,7 +53,18 @@ func ShowTask(db *sql.DB) http.HandlerFunc{
 			}
 			list = append(list , task)
 		}
-		json.NewEncoder(w).Encode(list)
+
+       nextpageno := pageno+1
+
+	   response := map[string]interface{}{
+		 "list of task":list,
+		 "next_pageno":nextpageno,
+		"has_more":  len(list) == limit,
+		"currentpageno":pageno,
+		"limit":limit,
+	   }
+
+		json.NewEncoder(w).Encode(response)
 
 	}
 }
