@@ -23,10 +23,10 @@ func CompletedTasks(db *sql.DB) http.HandlerFunc {
 				WHERE userId=?
 				AND status='DONE'`
 
-		var task models.Task
 		tasks := []models.Task{}
 		rows, err := db.Query(query, uid)
 		for rows.Next() {
+		    var task models.Task
 			rows.Scan(&task.ID,&task.NAME,&task.STATUS,&task.CreatedAt, &task.UpdatedAt,&task.Userid)
 			tasks = append(tasks, task)
 		}
