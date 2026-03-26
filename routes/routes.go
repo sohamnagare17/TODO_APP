@@ -18,5 +18,9 @@ func SetupRoutes(db *sql.DB) {
 	http.HandleFunc("/insertmany", handlers.Insertmany(db))
 	http.HandleFunc("/showtask", handlers.ShowTask(db))
 	http.HandleFunc("/viewtask", handlers.ViewTask(db))
-	http.HandleFunc("/createUser",handlers.CreateUser)
+	http.HandleFunc("/createUser",handlers.CreateUser(db))
+	http.HandleFunc("/getTasksCreatedAt",handlers.GetTaskByCreatedAt(db))
+	http.HandleFunc("/getTasksByUpdatedAt",handlers.GetTaskUpdatedAt(db))
+	http.HandleFunc("/getTasksByName",handlers.GetTasksByName(db))
+
 }
