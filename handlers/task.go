@@ -213,6 +213,64 @@ func GetTasksBySorted(db *sql.DB) http.HandlerFunc{
 	}
 }
 
+func DeleteTask(db *sql.DB) http.HandlerFunc{
+	return func(writer http.ResponseWriter, request *http.Request){
+		idstr := request.URL.Query().Get("id")
+		useridstr := request.URL.Query().Get("userid")
+
+
+		if idstr=="" || useridstr==""{
+			log.Println("userid and taskid  required plz provide ids")
+			return
+		}
+
+		id,err :=strconv.Atoi(idstr)
+		if err!=nil{
+			log.Println("id must be integer",err)
+			return 
+		}
+        
+		userid,err1:=strconv.Atoi(useridstr);
+		if err1!=nil{
+			log.Println("userid must be integer",err1)
+			return 
+		}
+        
+		query := `DELETE FROM tasks1 WHERE userid=? AND id=?`
+
+		result,err:=db.Exec(query,userid,id)
+
+		if err!=nil{
+			log.Println("error while executing the database query",err)
+			return 
+		}
+
+		 rowsAffected, err := result.RowsAffected()
+
+        if err!=nil{
+         log.Println("error in checking rows affected", err)
+		 return 
+		}         
+ 
+        if rowsAffected == 0 {
+           json.NewEncoder(writer).Encode(map[string]interface{}{
+              "error": "task not found",
+                    })
+            return
+        }
+
+		
+
+		json.NewEncoder(writer).Encode(map[string]interface{}{
+			"message":"task deleted succesfully",
+			"deleted userid":userid,
+			"deleted task":id,
+		})
+	}
+}
+
+
+
 
 
 
