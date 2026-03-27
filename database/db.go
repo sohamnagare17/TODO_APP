@@ -32,6 +32,8 @@ func Dbinit() *sql.DB{
 		 name TEXT ,
 		 status TEXT,
 		 userid INTEGER,
+		 createdAt DATETIME,
+		 updatedAt DATETIME,
 		  FOREIGN KEY(userid) REFERENCES users(user_id)
 	
 	);`
