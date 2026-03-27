@@ -1,12 +1,13 @@
 package handlers
 
-import(
-	"encoding/json"
-		"net/http"
-		"log"
+import (
 	"database/sql"
-		"go-sqlite/models"
-		"strconv"
+	"encoding/json"
+	"go-sqlite/models"
+	"log"
+	"net/http"
+	"strconv"
+	"time"
 )
 
 func GetTaskByUserId(db *sql.DB) http.HandlerFunc{
@@ -59,15 +60,17 @@ func InsertTask(db *sql.DB) http.HandlerFunc {
 		log.Println("error in fetching the data")
 		}
 
-		query := `INSERT INTO tasks1 (name , status,userid) VALUES(?,?,?)`
+		query := `INSERT INTO tasks1 (name,status,userid,createdAt,updatedAt) VALUES(?,?,?,?,?)`
+		now:=time.Now().Format("")
 
-		_, err = db.Exec(query,newtask.NAME,newtask.STATUS,newtask.USERID)
+		_, err = db.Exec(query,newtask.NAME,newtask.STATUS,newtask.USERID,now,now)
 
 		if err != nil{
 		log.Println("somthing went wrong to inserting the data ")
 		return 
 		}
-
+		
+		w.Header().Set("Content-type", "application/json")
 		json.NewEncoder(w).Encode(map[string]interface{}{
 		"message":"the task inserted succesfully into database ",
 		"taskname":newtask.NAME,
@@ -190,7 +193,7 @@ func GetTasksBySorted(db *sql.DB) http.HandlerFunc{
 		tasks := []models.Task{}
 
 		for rows.Next() {
-			rows.Scan(&task.ID, &task.NAME, &task.STATUS, &task.CreatedAt, &task.UpdatedAt, &task.USERID)
+			rows.Scan(&task.ID, &task.NAME, &task.STATUS,  &task.USERID,&task.CreatedAt, &task.UpdatedAt)
 			tasks = append(tasks, task)
 		}
 		rows.Close()
