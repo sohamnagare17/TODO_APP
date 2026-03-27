@@ -149,3 +149,57 @@ func UpdateStatusOfTask(db *sql.DB) http.HandlerFunc{
 	
 	}
 }
+
+
+
+
+func GetTasksBySorted(db *sql.DB) http.HandlerFunc{
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		id:=r.URL.Query().Get("userId")
+		if id==""{
+			log.Println("enter a valid user id")
+		}
+		userid,err:=strconv.Atoi(id)
+		if err!=nil{
+			log.Println("Error")
+		}
+
+		sort:=r.URL.Query().Get("sort")
+
+		query := `SELECT * FROM tasks1
+			WHERE userId = ?`
+		
+		switch sort{
+			case "name":
+				query+="ORDER BY name ASC"
+			case "createdAt":
+				query+="ORDER BY createdAt DESC"
+			case "updatedAt":
+				query+="ORDER BY updatedAt DESC"
+			default:
+				query+="ORDER BY id DESC"
+
+		}
+		log.Println(query)
+		rows, err := db.Query(query, userid)
+		if err != nil {
+			log.Fatal("Internal server Error")
+		}
+		var task models.Task
+		tasks := []models.Task{}
+
+		for rows.Next() {
+			rows.Scan(&task.ID, &task.NAME, &task.STATUS, &task.CreatedAt, &task.UpdatedAt, &task.USERID)
+			tasks = append(tasks, task)
+		}
+		rows.Close()
+		w.Header().Set("Content-type", "application/json")
+		json.NewEncoder(w).Encode(tasks)
+
+	}
+}
+
+
+
+
