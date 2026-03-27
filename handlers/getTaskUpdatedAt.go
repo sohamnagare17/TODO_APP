@@ -33,7 +33,7 @@ func GetTaskUpdatedAt(db *sql.DB) http.HandlerFunc{
 	tasks := []models.Task{}
 
 	for rows.Next() {
-		rows.Scan(&task.ID, &task.NAME, &task.STATUS, &task.CreatedAt, &task.UpdatedAt, &task.Userid)
+		rows.Scan(&task.ID, &task.NAME, &task.STATUS, &task.CreatedAt, &task.UpdatedAt, &task.USERID)
 		tasks = append(tasks, task)
 	}
 	rows.Close()

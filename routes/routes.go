@@ -18,11 +18,17 @@ func SetupRoutes(db *sql.DB) {
 	http.HandleFunc("/insertmany", handlers.Insertmany(db))
 	http.HandleFunc("/showtask", handlers.ShowTask(db))
 	http.HandleFunc("/viewtask", handlers.ViewTask(db))
-	http.HandleFunc("/createUser",handlers.CreateUser(db))
-	http.HandleFunc("/getTasksCreatedAt",handlers.GetTaskByCreatedAt(db))
-	http.HandleFunc("/getTasksByUpdatedAt",handlers.GetTaskUpdatedAt(db))
-	http.HandleFunc("/getTasksByName",handlers.GetTasksByName(db))
-	http.HandleFunc("/completedTasks",handlers.CompletedTasks(db))
-	http.HandleFunc("/pendingTasks",handlers.PendingTasks(db))
+
+
+	http.HandleFunc("/task", handlers.InsertTask(db))
+	http.HandleFunc("/user",handlers.InsertUser(db))
 	http.HandleFunc("/users",handlers.GetAllUsers(db))
+	http.HandleFunc("/user/id",handlers.GetUserById(db))
+	http.HandleFunc("/task/userid",handlers.GetTaskByUserId(db))
+	http.HandleFunc("/task/status/userid",handlers.GetTask(db))
+	http.HandleFunc("/task/status",handlers.UpdateStatusOfTask(db))
+	http.HandleFunc("/task/name",handlers.GetTasksByName(db))
+	http.HandleFunc("/task/createdAt",handlers.GetTaskByCreatedAt(db))
+	http.HandleFunc("/task/updatedAt",handlers.GetTaskUpdatedAt(db))
+	
 }

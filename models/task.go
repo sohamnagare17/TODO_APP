@@ -4,7 +4,7 @@ import "time"
  
 
 type Task struct{
-	Userid int `json:"userId"`
+	USERID int `json:"user_id"`
 	ID int  `json:"id"`
 	NAME string `json:"name"`
 	STATUS  string `json:"status"`
@@ -12,8 +12,3 @@ type Task struct{
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-type User struct{
-	Userid int `json:"userId"`
-	UserName string `json:"username"`
-	Email string `json:"email"`
-}
