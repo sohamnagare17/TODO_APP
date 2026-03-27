@@ -1,6 +1,6 @@
 package models
 
-import "time"
+// import "time"
  
 
 type Task struct{
@@ -8,7 +8,7 @@ type Task struct{
 	ID int  `json:"id"`
 	NAME string `json:"name"`
 	STATUS  string `json:"status"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
+	CreatedAt string `json:"createdAt"`
+	UpdatedAt string `json:"updatedAt"`
 }
 

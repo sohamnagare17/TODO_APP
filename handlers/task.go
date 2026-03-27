@@ -60,13 +60,14 @@ func InsertTask(db *sql.DB) http.HandlerFunc {
 		log.Println("error in fetching the data")
 		}
 
-		query := `INSERT INTO tasks1 (name,status,userid,createdAt,updatedAt) VALUES(?,?,?,?,?)`
-		now:=time.Now().Format("")
+		query := `INSERT INTO tasks1 (name ,status,userid,createdAt,updatedAt) VALUES(?,?,?,?,?)`
+		now:=time.Now().UTC().Format(time.RFC3339)
 
 		_, err = db.Exec(query,newtask.NAME,newtask.STATUS,newtask.USERID,now,now)
+		
 
 		if err != nil{
-		log.Println("somthing went wrong to inserting the data ")
+		log.Println("somthing went wrong to inserting the data ",err)
 		return 
 		}
 		
@@ -130,12 +131,14 @@ func UpdateStatusOfTask(db *sql.DB) http.HandlerFunc{
 			Status string `json:"status"`
 		}
       err:= json.NewDecoder(request.Body).Decode(&req);
+	  
 	  if err!=nil{
 		log.Println("error in decoding the data")
 		return 
 	  }
+	  
        res, err := db.Exec(
-			"UPDATE tasks1 SET status=? WHERE id=? AND userid=?",
+			"UPDATE tasks1 SET status=?, updatedAt=CURRENT_TIMESTAMP WHERE id=? AND userid=? ",
 			req.Status, req.TaskId, req.UserId,
 		)
 
@@ -153,13 +156,10 @@ func UpdateStatusOfTask(db *sql.DB) http.HandlerFunc{
 	}
 }
 
-
-
-
 func GetTasksBySorted(db *sql.DB) http.HandlerFunc{
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		id:=r.URL.Query().Get("userId")
+		id:=r.URL.Query().Get("userid")
 		if id==""{
 			log.Println("enter a valid user id")
 		}
@@ -193,12 +193,14 @@ func GetTasksBySorted(db *sql.DB) http.HandlerFunc{
 		tasks := []models.Task{}
 
 		for rows.Next() {
-			rows.Scan(&task.ID, &task.NAME, &task.STATUS,  &task.USERID,&task.CreatedAt, &task.UpdatedAt)
+			rows.Scan(&task.ID, &task.NAME, &task.STATUS, &task.CreatedAt, &task.UpdatedAt,)
 			tasks = append(tasks, task)
 		}
 		rows.Close()
 		w.Header().Set("Content-type", "application/json")
-		json.NewEncoder(w).Encode(tasks)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"tasks":tasks,
+		})
 
 	}
 }
