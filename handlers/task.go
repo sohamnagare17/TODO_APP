@@ -61,8 +61,9 @@ func InsertTask(db *sql.DB) http.HandlerFunc {
 		}
 
 		query := `INSERT INTO tasks1 (name ,status,userid,createdAt,updatedAt) VALUES(?,?,?,?,?)`
+		now:=time.Now().UTC().Format(time.RFC3339)
 
-		_, err = db.Exec(query,newtask.NAME,newtask.STATUS,newtask.USERID,time.Now(),time.Now())
+		_, err = db.Exec(query,newtask.NAME,newtask.STATUS,newtask.USERID,now,now)
 		
 
 		if err != nil{
@@ -158,7 +159,7 @@ func UpdateStatusOfTask(db *sql.DB) http.HandlerFunc{
 func GetTasksBySorted(db *sql.DB) http.HandlerFunc{
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		id:=r.URL.Query().Get("userId")
+		id:=r.URL.Query().Get("userid")
 		if id==""{
 			log.Println("enter a valid user id")
 		}
@@ -192,12 +193,14 @@ func GetTasksBySorted(db *sql.DB) http.HandlerFunc{
 		tasks := []models.Task{}
 
 		for rows.Next() {
-			rows.Scan(&task.ID, &task.NAME, &task.STATUS, &task.CreatedAt, &task.UpdatedAt, &task.USERID)
+			rows.Scan(&task.ID, &task.NAME, &task.STATUS, &task.CreatedAt, &task.UpdatedAt,)
 			tasks = append(tasks, task)
 		}
 		rows.Close()
 		w.Header().Set("Content-type", "application/json")
-		json.NewEncoder(w).Encode(tasks)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"tasks":tasks,
+		})
 
 	}
 }
