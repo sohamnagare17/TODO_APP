@@ -142,11 +142,19 @@ func UpdateStatusOfTask(db *sql.DB) http.HandlerFunc{
 			req.Status, req.TaskId, req.UserId,
 		)
 
-		if err!=nil{
-			log.Println("error in the db execution",err)
+		rowsAffected, err := res.RowsAffected()
+		if err != nil {
+			log.Println("RowsAffected error:", err)
+			http.Error(writer, "Error checking result", http.StatusInternalServerError)
 			return
 		}
 
+		if rowsAffected == 0 {
+			http.Error(writer, "Task not found", http.StatusNotFound)
+			return
+		}
+
+		writer.Header().Set("Content-type", "application/json")
 		json.NewEncoder(writer).Encode(map[string]interface{}{
 			"message":"status updated succesfully",
 			"result":res,
