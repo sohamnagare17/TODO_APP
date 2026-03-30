@@ -14,7 +14,17 @@ func GetTaskByUserId(db *sql.DB) http.HandlerFunc{
 	return func( writer http.ResponseWriter ,request *http.Request){
 
 		var tasklist []models.Task;
-		useridstr := request.URL.Query().Get("user_id")
+
+
+		// userIDStr := r.PathValue("userId")
+
+        // userID, err := strconv.Atoi(userIDStr)
+        // if err != nil {
+        //     http.Error(w, "invalid userId", http.StatusBadRequest)
+        //     return
+        // }
+		
+		useridstr := request.PathValue("userid")
 
 		if useridstr ==""{
 			log.Println("id required plz!")
@@ -54,7 +64,15 @@ func InsertTask(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request){
         var newtask models.Task;
 
-		err := json.NewDecoder(r.Body).Decode(&newtask)
+		 userIDStr := r.PathValue("userId")
+
+        userID, err := strconv.Atoi(userIDStr)
+        if err != nil {
+            http.Error(w, "invalid userId", http.StatusBadRequest)
+            return
+        }
+
+		err = json.NewDecoder(r.Body).Decode(&newtask)
 
 		if err!=nil{
 		log.Println("error in fetching the data")
@@ -63,7 +81,7 @@ func InsertTask(db *sql.DB) http.HandlerFunc {
 		query := `INSERT INTO tasks1 (name ,status,userid,createdAt,updatedAt) VALUES(?,?,?,?,?)`
 		now:=time.Now().UTC().Format(time.RFC3339)
 
-		_, err = db.Exec(query,newtask.NAME,newtask.STATUS,newtask.USERID,now,now)
+		_, err = db.Exec(query,newtask.NAME,newtask.STATUS,userID,now,now)
 		
 
 		if err != nil{
@@ -75,18 +93,18 @@ func InsertTask(db *sql.DB) http.HandlerFunc {
 		json.NewEncoder(w).Encode(map[string]interface{}{
 		"message":"the task inserted succesfully into database ",
 		"taskname":newtask.NAME,
-		"userid":newtask.USERID,
+		"userid":userID,
 		})
 
 	}
 }
 
-func GetTask(db *sql.DB) http.HandlerFunc{
+func GetTaskByStatus(db *sql.DB) http.HandlerFunc{
 	return func( writer http.ResponseWriter ,request *http.Request){
 
 		var tasklist []models.Task;
-		useridstr := request.URL.Query().Get("user_id")
-		status := request.URL.Query().Get("status")
+		useridstr := request.PathValue("userid")
+		status := request.PathValue("status")
 
 		if useridstr ==""{
 			log.Println("id required plz!")
@@ -167,16 +185,16 @@ func UpdateStatusOfTask(db *sql.DB) http.HandlerFunc{
 func GetTasksBySorted(db *sql.DB) http.HandlerFunc{
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		id:=r.URL.Query().Get("userid")
-		if id==""{
+		useridstr:=r.PathValue("userid")
+		if useridstr==""{
 			log.Println("enter a valid user id")
 		}
-		userid,err:=strconv.Atoi(id)
+		userid,err:=strconv.Atoi(useridstr)
 		if err!=nil{
 			log.Println("Error")
 		}
 
-		sort:=r.URL.Query().Get("sort")
+		sort:=r.PathValue("sort")
 
 		query := `SELECT * FROM tasks1
 			WHERE userId = ?`
@@ -215,8 +233,8 @@ func GetTasksBySorted(db *sql.DB) http.HandlerFunc{
 
 func DeleteTask(db *sql.DB) http.HandlerFunc{
 	return func(writer http.ResponseWriter, request *http.Request){
-		idstr := request.URL.Query().Get("id")
-		useridstr := request.URL.Query().Get("userid")
+		idstr := request.PathValue("taskid")
+		useridstr := request.PathValue("userid")
 
 
 		if idstr=="" || useridstr==""{

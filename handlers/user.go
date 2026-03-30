@@ -76,7 +76,7 @@ func GetUserById(db *sql.DB) http.HandlerFunc{
 	return func(writer http.ResponseWriter , request *http.Request){
 		var user models.Users
 
-		idstr := request.URL.Query().Get("userid")
+		idstr := request.PathValue("userid")
 
 		if idstr ==""{
 			log.Println("Id required")
