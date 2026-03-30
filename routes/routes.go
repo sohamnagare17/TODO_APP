@@ -29,6 +29,18 @@ func SetupRoutes(db *sql.DB) {
 	http.HandleFunc("/task/status",handlers.UpdateStatusOfTask(db))
 	http.HandleFunc("/tasks",handlers.GetTasksBySorted(db))
 	http.HandleFunc("/task/user",handlers.DeleteTask(db))
+
+
+
+         //have to update each every route handler function
+		// http.HandleFunc("POST /users", handlers.InsertUser(db))
+		// http.HandleFunc("POST /users/{userId}/tasks", handlers.InsertTask(db))
+		// http.HandleFunc("GET /users", handlers.GetAllUsers(db))
+		// http.HandleFunc("GET /users/{id}", handlers.GetUserById(db))
+		// http.HandleFunc("GET /users/{userId}/tasks", handlers.GetTaskByUserId(db))
+		// http.HandleFunc("GET /tasks", handlers.GetTasksBySorted(db))
+		// http.HandleFunc("PATCH /tasks/{taskId}/status", handlers.UpdateStatusOfTask(db))
+		// http.HandleFunc("DELETE /users/{userId}/tasks/{taskId}", handlers.DeleteTask(db))
 	
-	
+
 }
