@@ -318,7 +318,6 @@ func UpdateTask(db *sql.DB) http.HandlerFunc{
 		writer.Header().Set("Content-type","application/json")
 		json.NewEncoder(writer).Encode(map[string]interface{}{
 			"message": "task updated successfully",
-			"rows":    rows,
 		})
 	}
 }
