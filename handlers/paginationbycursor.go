@@ -38,7 +38,7 @@ func ViewTask(db *sql.DB) http.HandlerFunc{
 
 		  for rows.Next(){
                var task models.Task
-			   err := rows.Scan(&task.ID,&task.NAME,&task.STATUS)
+			   err := rows.Scan(&task.Id,&task.Name,&task.Status)
 
 			   if err!=nil{
 				log.Println("wrong in the scanning the data from the rows ")
@@ -48,7 +48,7 @@ func ViewTask(db *sql.DB) http.HandlerFunc{
 		  }
           nextcursor := afterind
 		  if (len(list)>0){
-			nextcursor = list[len(list)-1].ID
+			nextcursor = list[len(list)-1].Id
 		  }
 
       json.NewEncoder(w).Encode(map[string]interface{}{

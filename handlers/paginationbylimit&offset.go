@@ -46,7 +46,7 @@ func ShowTask(db *sql.DB) http.HandlerFunc{
 
 		for rows.Next(){
 			var task models.Task
-			err := rows.Scan(&task.ID,&task.NAME,&task.STATUS)
+			err := rows.Scan(&task.Id,&task.Name,&task.Status)
 
 			if err!=nil{
 				log.Println("somthing went wrong in fetching the data")
