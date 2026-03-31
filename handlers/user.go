@@ -1,109 +1,141 @@
 package handlers
 
 import (
-	"encoding/json"
-	"net/http"
-	"log"
 	"database/sql"
+	"encoding/json"
 	"go-sqlite/models"
+	"log"
+	"net/http"
+	"net/mail"
 	"strconv"
+	"strings"
 )
 
-func InsertUser(db *sql.DB) http.HandlerFunc{
-	return func(writer http.ResponseWriter, request *http.Request){
+func InsertUser(db *sql.DB) http.HandlerFunc {
+	return func(writer http.ResponseWriter, request *http.Request) {
 
-		var user models.Users;
+		var user models.Users
 
 		err := json.NewDecoder(request.Body).Decode(&user)
 
-		if err!=nil{
-			log.Println("error in decoding the data",err)
-			return 
+		if err != nil {
+			log.Println("error in decoding the data", err)
+			http.Error(writer, "invalid or empty request body", http.StatusBadRequest)
+			return
 		}
-
-		if user.Username==""|| user.Email==""{
+		if user.Username == "" && user.Email == "" {
+			http.Error(writer, "Username and email Required", 400)
 			log.Println("username and email required ")
-			return;
+			return
+		}
+		if user.Username == "" {
+			http.Error(writer, "Username  Required", 400)
+			log.Println("username required ")
+			return
+		}
+		if user.Email == "" {
+			http.Error(writer, "Email  Required", 400)
+			log.Println("Email required ")
+			return
 		}
 
+		if strings.TrimSpace(user.Username) == "" {
+			http.Error(writer, "Username Required", 400)
+			log.Println("Username Required")
+			return
+		}
+		if strings.TrimSpace(user.Email) == "" {
+			http.Error(writer, "Email is required", http.StatusBadRequest)
+			log.Println("Email is required")
+			return
+		}
+		_, err = mail.ParseAddress(user.Email)
+		if err != nil {
+			http.Error(writer, "Invalid Email", http.StatusBadRequest)
+			log.Println("Enter a valid Email")
+			return
+		}
+		if len(user.Username) < 2 {
+			http.Error(writer, "Name should greater than 2 characters", 400)
+			return
+		}
 		query := `INSERT INTO users(username,email) VALUES(?,?) `
+		_, err = db.Exec(query, user.Username, user.Email)
 
-		_,err = db.Exec(query,user.Username,user.Email)
-
-		if err!=nil{
-			log.Println("error while inserting the user ",err)
-			http.Error(writer,"email already exists",409)
-			return 
+		if err != nil {
+			log.Println("error while inserting the user ", err)
+			http.Error(writer, "email already exists", 409)
+			return
 		}
 		json.NewEncoder(writer).Encode(map[string]interface{}{
-			"username":user.Username,
-			"message":"This user added succesfully",
+			"username": user.Username,
+			"message":  "This user added succesfully",
 		})
 	}
 }
-func GetAllUsers(db *sql.DB) http.HandlerFunc{
-	return func(writer http.ResponseWriter, request *http.Request){
-		var userlist []models.Users;
 
-		query := `SELECT * FROM users`;
+func GetAllUsers(db *sql.DB) http.HandlerFunc {
+	return func(writer http.ResponseWriter, request *http.Request) {
+		var userlist []models.Users
 
-		rows,err := db.Query(query)
+		query := `SELECT * FROM users`
 
-		if err!=nil{
-			log.Println("error in fetching the data from the database",err)
-			return 
+		rows, err := db.Query(query)
+
+		if err != nil {
+			log.Println("error in fetching the data from the database", err)
+			return
 		}
 
-		for rows.Next(){
+		for rows.Next() {
 			var user models.Users
 
-			err = rows.Scan(&user.Userid,&user.Email,&user.Username)
-			if err!=nil{
-				log.Println("error in scanning the data from the rows",err)
+			err = rows.Scan(&user.Userid, &user.Email, &user.Username)
+			if err != nil {
+				log.Println("error in scanning the data from the rows", err)
 			}
 			userlist = append(userlist, user)
 		}
 
 		json.NewEncoder(writer).Encode(map[string]interface{}{
-			"message":"list of the user as follows",
-			"userlist":userlist,
+			"message":  "list of the user as follows",
+			"userlist": userlist,
 		})
 
-	
 	}
 }
-func GetUserById(db *sql.DB) http.HandlerFunc{
-	return func(writer http.ResponseWriter , request *http.Request){
+
+func GetUserById(db *sql.DB) http.HandlerFunc {
+	return func(writer http.ResponseWriter, request *http.Request) {
 		var user models.Users
 
 		idstr := request.PathValue("userid")
 
-		if idstr ==""{
+		if idstr == "" {
 			log.Println("Id required")
 			return
 		}
 
-		id ,err := strconv.Atoi(idstr)
-		if err!=nil{
+		id, err := strconv.Atoi(idstr)
+		if err != nil {
 			log.Println("id must be number")
-			return 
+			return
 		}
 
 		query := `SELECT * FROM users WHERE user_id=?`
 
-		err1:=db.QueryRow(query,id).Scan(&user.Userid,&user.Username,&user.Email)
+		err1 := db.QueryRow(query, id).Scan(&user.Userid, &user.Username, &user.Email)
 
-		if err1!=nil{
+		if err1 != nil {
 			log.Println("error in the fetching the data")
-			return 
+			return
 		}
 		json.NewEncoder(writer).Encode(map[string]interface{}{
-			"message":"the user is ",
-			"username":user.Username,
-			"userid":user.Userid,
-			"useremail":user.Email,
+			"message":   "the user is ",
+			"username":  user.Username,
+			"userid":    user.Userid,
+			"useremail": user.Email,
 		})
 
-		
 	}
 }
