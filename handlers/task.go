@@ -121,46 +121,7 @@ func InsertTask(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// func GetTaskByStatus(db *sql.DB) http.HandlerFunc {
-// 	return func(writer http.ResponseWriter, request *http.Request) {
 
-// 		var tasklist []models.Task
-// 		useridstr := request.PathValue("userid")
-// 		status := request.PathValue("status")
-
-// 		if useridstr == "" {
-// 			log.Println("id required plz!")
-// 			return
-// 		}
-
-// 		userid, err := strconv.Atoi(useridstr)
-// 		if err != nil {
-// 			log.Println("id must be the number")
-// 			return
-// 		}
-// 		query := `SELECT id,name,status,userid FROM tasks1 WHERE userid=? AND status=?`
-
-// 		rows, err1 := db.Query(query, userid, status)
-// 		for rows.Next() {
-// 			var task models.Task
-
-// 			err = rows.Scan(&task.ID, &task.NAME, &task.STATUS, &task.USERID)
-// 			if err1 != nil {
-// 				log.Println("error in scanning the data from the rows", err)
-// 			}
-// 			tasklist = append(tasklist, task)
-// 		}
-// 		if err != nil {
-// 			log.Println("error in fetching the data")
-// 			return
-// 		}
-
-// 		json.NewEncoder(writer).Encode(map[string]interface{}{
-// 			"message":  "the task of the user are",
-// 			"tasklist": tasklist,
-// 		})
-// 	}
-// }
 
 func UpdateStatusOfTask(db *sql.DB) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
@@ -203,54 +164,6 @@ func UpdateStatusOfTask(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// func GetTasksBySorted(db *sql.DB) http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
-
-// 		useridstr := r.PathValue("userid")
-// 		if useridstr == "" {
-// 			log.Println("enter a valid user id")
-// 		}
-// 		userid, err := strconv.Atoi(useridstr)
-// 		if err != nil {
-// 			log.Println("Error")
-// 		}
-
-// 		sort := r.PathValue("sort")
-
-// 		query := `SELECT * FROM tasks1
-// 			WHERE userId = ?`
-
-// 		switch sort {
-// 		case "name":
-// 			query += "ORDER BY name ASC"
-// 		case "createdAt":
-// 			query += "ORDER BY createdAt DESC"
-// 		case "updatedAt":
-// 			query += "ORDER BY updatedAt DESC"
-// 		default:
-// 			query += "ORDER BY id DESC"
-
-// 		}
-// 		log.Println(query)
-// 		rows, err := db.Query(query, userid)
-// 		if err != nil {
-// 			log.Fatal("Internal server Error")
-// 		}
-// 		var task models.Task
-// 		tasks := []models.Task{}
-
-// 		for rows.Next() {
-// 			rows.Scan(&task.ID, &task.NAME, &task.STATUS, &task.USERID, &task.CreatedAt, &task.UpdatedAt)
-// 			tasks = append(tasks, task)
-// 		}
-// 		rows.Close()
-// 		w.Header().Set("Content-type", "application/json")
-// 		json.NewEncoder(w).Encode(map[string]interface{}{
-// 			"tasks": tasks,
-// 		})
-
-// 	}
-// }
 
 func DeleteTask(db *sql.DB) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
