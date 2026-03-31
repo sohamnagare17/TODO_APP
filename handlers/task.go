@@ -78,6 +78,7 @@ func InsertTask(db *sql.DB) http.HandlerFunc {
 		}
 
 		query := `INSERT INTO tasks1 (name ,status,userid,createdAt,updatedAt) VALUES(?,?,?,?,?)`
+		//time.Now()
 		now := time.Now().UTC().Format(time.RFC3339)
 
 		_, err = db.Exec(query, newtask.NAME, newtask.STATUS, userID, now, now)
@@ -135,47 +136,6 @@ func GetTaskByStatus(db *sql.DB) http.HandlerFunc {
 			"message":  "the task of the user are",
 			"tasklist": tasklist,
 		})
-	}
-}
-
-func UpdateStatusOfTask(db *sql.DB) http.HandlerFunc {
-	return func(writer http.ResponseWriter, request *http.Request) {
-
-		var req struct {
-			TaskId int    `json:"taskid"`
-			UserId int    `json:"user_id"`
-			Status string `json:"status"`
-		}
-		err := json.NewDecoder(request.Body).Decode(&req)
-
-		if err != nil {
-			log.Println("error in decoding the data")
-			return
-		}
-
-		res, err := db.Exec(
-			"UPDATE tasks1 SET status=?, updatedAt=CURRENT_TIMESTAMP WHERE id=? AND userid=? ",
-			req.Status, req.TaskId, req.UserId,
-		)
-
-		rowsAffected, err := res.RowsAffected()
-		if err != nil {
-			log.Println("RowsAffected error:", err)
-			http.Error(writer, "Error checking result", http.StatusInternalServerError)
-			return
-		}
-
-		if rowsAffected == 0 {
-			http.Error(writer, "Task not found", http.StatusNotFound)
-			return
-		}
-
-		writer.Header().Set("Content-type", "application/json")
-		json.NewEncoder(writer).Encode(map[string]interface{}{
-			"message": "status updated succesfully",
-			"result":  res,
-		})
-
 	}
 }
 
@@ -281,59 +241,84 @@ func DeleteTask(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-func RenameTask(db *sql.DB) http.HandlerFunc {
-	return func(writer http.ResponseWriter, request *http.Request) {
 
-		userid := request.PathValue("userid")
-		taskid := request.PathValue("taskid")
+func UpdateTask(db *sql.DB) http.HandlerFunc{
+	return  func(writer http.ResponseWriter, request *http.Request) {
 
-		if userid == "" || taskid == "" {
-			log.Println("userid and taskid  required plz provide ids")
+		userid:=request.PathValue("userid")
+		taskid:=request.PathValue("taskid")
+
+		if userid==""||taskid==""{
+			http.Error(writer,"Enter a valid task and user id",400)
+			log.Println("Id is required")
+			return
+		}
+		uid,err:=strconv.Atoi(userid)
+		if err!=nil{
+			http.Error(writer,"Invalid User id",400)
+			log.Println("Enter a valid user id")
+			return
+		}
+		tid,err:=strconv.Atoi(taskid)
+		if err!=nil{
+			http.Error(writer,"Enter a valid task id",400)
+			log.Println("Enter a valid task id")
+			return
+		}
+		
+		var reqbody struct{
+			Name string `json:"name"`
+			Status string `json:"status"`
+		}
+		err=json.NewDecoder(request.Body).Decode(&reqbody)
+		if err!=nil{
+			http.Error(writer,"Invalid body",400)
+			log.Println("Error in the request Body")
 			return
 		}
 
-		tid, err := strconv.Atoi(taskid)
-		if err != nil {
-			log.Println("Taskid must be integer", err)
-			return
-		}
-
-		uid, err1 := strconv.Atoi(userid)
-		if err1 != nil {
-			log.Println("userid must be integer", err1)
-			return
-		}
-
-		var task models.Task
-		json.NewDecoder(request.Body).Decode(&task)
-
-		query := `UPDATE tasks1 SET NAME=?, updatedAt=CURRENT_TIMESTAMP 
+		var query string
+		var res sql.Result
+		switch{
+		case reqbody.Name!=""&&reqbody.Status!="":
+			query=`UPDATE tasks1 
+				SET name=? ,status=?,updatedAt=CURRENT_TIMESTAMP
 				WHERE id=? AND userid=?`
+			res,err=db.Exec(query,reqbody.Name,reqbody.Status,tid,uid)
+		
+		case reqbody.Name!="":
+			query=`UPDATE tasks1 
+				SET name=?,updatedAt=CURRENT_TIMESTAMP
+				WHERE id=? AND userid=?`
+			res,err=db.Exec(query,reqbody.Name,tid,uid)
+		
+		case reqbody.Status!="":
+			query=`UPDATE tasks1 
+				SET status=?,updatedAt=CURRENT_TIMESTAMP
+				WHERE id=? AND userid=?`
+			res,err=db.Exec(query,reqbody.Status,tid,uid)
 
-		res, err := db.Exec(query, task.NAME, tid, uid)
-
-		if err != nil {
-			log.Println("error while executing the database query", err)
+		default:
+			http.Error(writer,"Nothing to update",400)
 			return
 		}
 
-		rowsAffected, err := res.RowsAffected()
-
-		if err != nil {
-			log.Println("error in checking rows affected", err)
-			return
+		if err!=nil{
+			http.Error(writer,"Internal Server Error",500)
+			log.Println("Internal server error")
+			return 
 		}
 
-		if rowsAffected == 0 {
-			json.NewEncoder(writer).Encode(map[string]interface{}{
-				"error": "task not found",
-			})
-			return
+		rows,_:=res.RowsAffected()
+		if rows==0{
+			http.Error(writer,"Task not found",400)
+			log.Println("task not found")
+			return 
 		}
-
+		writer.Header().Set("Content-type","application/json")
 		json.NewEncoder(writer).Encode(map[string]interface{}{
-			"message":        "task rename succesfully",
+			"message": "task updated successfully",
+			"rows":    rows,
 		})
-
 	}
 }
