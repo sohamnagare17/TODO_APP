@@ -28,14 +28,13 @@ func Dbinit() *sql.DB{
 	
 
 	query := `CREATE TABLE IF NOT EXISTS tasks1(
-	     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-		 name TEXT ,
-		 status TEXT,
-		 userid INTEGER,
-		 createdAt DATETIME,
-		 updatedAt DATETIME,
-		  FOREIGN KEY(userid) REFERENCES users(user_id)
-	
+	    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+		name TEXT ,
+		status TEXT,
+		userid INTEGER,
+		createdAt TEXT,
+		updatedAt TEXT,
+		FOREIGN KEY(userid) REFERENCES users(user_id)
 	);`
 
 	_,err = db.Exec(query)

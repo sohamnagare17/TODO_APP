@@ -42,7 +42,7 @@ func GetTaskByUserId(db *sql.DB) http.HandlerFunc {
 		for rows.Next() {
 			var task models.Task
 
-			err = rows.Scan(&task.ID, &task.NAME, &task.STATUS, &task.USERID)
+			err = rows.Scan(&task.Id, &task.Name, &task.Status, &task.UserId)
 			if err1 != nil {
 				log.Println("error in scanning the data from the rows", err)
 			}
@@ -82,7 +82,7 @@ func InsertTask(db *sql.DB) http.HandlerFunc {
 		//time.Now()
 		now := time.Now().UTC().Format(time.RFC3339)
 
-		_, err = db.Exec(query, newtask.NAME, newtask.STATUS, userID, now, now)
+		_, err = db.Exec(query, newtask.Name, newtask.Status, userID, now, now)
 
 		if err != nil {
 			log.Println("somthing went wrong to inserting the data ", err)
@@ -92,7 +92,7 @@ func InsertTask(db *sql.DB) http.HandlerFunc {
 		w.Header().Set("Content-type", "application/json")
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"message":  "the task inserted succesfully into database ",
-			"taskname": newtask.NAME,
+			"taskname": newtask.Name,
 			"userid":   userID,
 		})
 
@@ -122,7 +122,7 @@ func GetTaskByStatus(db *sql.DB) http.HandlerFunc {
 		for rows.Next() {
 			var task models.Task
 
-			err = rows.Scan(&task.ID, &task.NAME, &task.STATUS, &task.USERID)
+			err = rows.Scan(&task.Id, &task.Name, &task.Status, &task.UserId)
 			if err1 != nil {
 				log.Println("error in scanning the data from the rows", err)
 			}
@@ -177,7 +177,7 @@ func GetTasksBySorted(db *sql.DB) http.HandlerFunc {
 		tasks := []models.Task{}
 
 		for rows.Next() {
-			rows.Scan(&task.ID, &task.NAME, &task.STATUS, &task.USERID, &task.CreatedAt, &task.UpdatedAt)
+			rows.Scan(&task.Id, &task.Name, &task.Status, &task.UserId, &task.CreatedAt, &task.UpdatedAt)
 			tasks = append(tasks, task)
 		}
 		rows.Close()
@@ -296,7 +296,6 @@ func UpdateTask(db *sql.DB) http.HandlerFunc {
 		var query string
 		if reqbody.Name!="" &&name==""{
 			http.Error(writer,"Name should not be empty",400)
-			log.Println("Enter a valid name")
 			return 
 		}
 		

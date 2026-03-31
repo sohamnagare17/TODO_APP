@@ -1,14 +1,15 @@
 package models
 
-// import "time"
+import "time"
+
  
 
 type Task struct{
-	USERID int `json:"user_id"`
-	ID int  `json:"id"`
-	NAME string `json:"name"`
-	STATUS  string `json:"status"`
-	CreatedAt string `json:"createdAt"`
-	UpdatedAt string `json:"updatedAt"`
+	UserId int `json:"user_id"`
+	Id int  `json:"id"`
+	Name string `json:"name"`
+	Status  string `json:"status"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
