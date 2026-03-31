@@ -24,22 +24,26 @@ func GetTaskByUserId(db *sql.DB) http.HandlerFunc {
 		limitstr := request.URL.Query().Get("limit")
 		pagenostr := request.URL.Query().Get("pageno")
 
-		limit,err:=strconv.Atoi(limitstr)
-	     if err!=nil{
-			 log.Println("plz provide valid limit value",err)
-			 return 
-		  }
-         pageno:=1
-	   pageno,err1:= strconv.Atoi(pagenostr)
-		  if err1!=nil{
-			log.Println("plz provide valid after index value")
-		  } 
-	    if limit < 1{
-			limit=1
+		var err error
+        limit:=5
+		pageno:=1
+		if limitstr!=""{
+			parsedlimit, err := strconv.Atoi(limitstr);
+			if err!=nil{
+				log.Println("plz provide valid limit",err)
+				return 
+			}
+			limit=parsedlimit
 		}
-		if pageno <1{
-			pageno=1
+		if pagenostr!=""{
+			parsedpage, err := strconv.Atoi(pagenostr);
+			if err!=nil{
+				log.Println("plz provide valid pageno",err)
+				return 
+			}
+			pageno=parsedpage
 		}
+	      
 
 		if useridstr == "" {
 			log.Println("id required plz!")
@@ -111,18 +115,12 @@ func GetTaskByUserId(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		var nextCursor string
-		if len(tasklist) > 0{
-			nextCursor = tasklist[len(tasklist)-1].CreatedAt
-		}
-         nextpageno := pageno+1
+		
+         
 		json.NewEncoder(writer).Encode(map[string]interface{}{
 			"message":  "the task of the user are",
 			"tasklist": tasklist,
-			"limit":limit,
-			"next_page":nextpageno,
-			"next_cursor":nextCursor,
-			"has_more": len(tasklist) == limit,
+			
 		})
 	}
 }

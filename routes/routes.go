@@ -11,9 +11,9 @@ func SetupRoutes(db *sql.DB) {
 
 	http.HandleFunc("POST /users/{userId}/tasks", handlers.InsertTask(db))
 	http.HandleFunc("POST /user",handlers.InsertUser(db))
+
 	http.HandleFunc("GET /users",handlers.GetAllUsers(db))
 	http.HandleFunc("GET /users/{userid}",handlers.GetUserById(db))
-
 	http.HandleFunc("GET /users/{userid}/tasks",handlers.GetTaskByUserId(db))
 
 
