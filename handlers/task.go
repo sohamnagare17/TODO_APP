@@ -44,7 +44,6 @@ func GetTaskByUserId(db *sql.DB) http.HandlerFunc {
 			parameters = append(parameters,status)
 		}
 		
-
 		if validfields[sortby]{
 			query = query + " ORDER BY " + sortby
 			
@@ -85,41 +84,70 @@ func GetTaskByUserId(db *sql.DB) http.HandlerFunc {
 }
 
 func InsertTask(db *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		var newtask models.Task
+	return func(writer http.ResponseWriter, request *http.Request) {
 
-		userIDStr := r.PathValue("userId")
+		if request.Method!=http.MethodPost{
+			http.Error(writer,"Invalid Method type",405)
+			log.Println("Invalid Method type")
+			return
+		}
+		var newtask models.Task
+		userIDStr := request.PathValue("userId")
 
 		userID, err := strconv.Atoi(userIDStr)
 		if err != nil {
-			http.Error(w, "invalid userId", http.StatusBadRequest)
+			log.Println("User id must be positive")
+			http.Error(writer, "invalid userId", http.StatusBadRequest)
+			return
+		}
+		if userID<=0{
+			log.Println("User id must be positive")
+			http.Error(writer,"userid must be positive",400)
 			return
 		}
 
-		err = json.NewDecoder(r.Body).Decode(&newtask)
+		err = json.NewDecoder(request.Body).Decode(&newtask)
 
 		if err != nil {
+			http.Error(writer,"Invalid body or empty body",400)
 			log.Println("error in fetching the data")
+			return
+		}
+		newtask.Name=strings.TrimSpace(newtask.Name)
+		if newtask.Name==""{
+			http.Error(writer,"Task name should not be empty",400)
+			log.Println("Enter a task")
+			return
+		}
+		validstatus:=map[string]bool{
+			"pending":true,
+			"done":true,
+		}
+		newtask.Status=strings.ToLower(strings.TrimSpace(newtask.Status))
+		if newtask.Status == "" {
+				newtask.Status = "pending"
+		} else if !validstatus[newtask.Status] {
+			http.Error(writer,"Invalid status(done/pending only allowed)",400)
+			log.Println("Invalid status(done/pending only allowed)")
+			return
 		}
 
 		query := `INSERT INTO tasks1 (name ,status,userid,createdAt,updatedAt) VALUES(?,?,?,?,?)`
-		//time.Now()
+		
 		now := time.Now().UTC().Format(time.RFC3339)
-
 		_, err = db.Exec(query, newtask.Name, newtask.Status, userID, now, now)
 
 		if err != nil {
 			log.Println("somthing went wrong to inserting the data ", err)
+			http.Error(writer,"Error while creating the task",500)
 			return
 		}
-
-		w.Header().Set("Content-type", "application/json")
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		writer.Header().Set("Content-type", "application/json")
+		json.NewEncoder(writer).Encode(map[string]interface{}{
 			"message":  "the task inserted succesfully into database ",
 			"taskname": newtask.Name,
 			"userid":   userID,
 		})
-
 	}
 }
 
