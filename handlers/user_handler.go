@@ -60,3 +60,16 @@ func (handler *UserHandler) GetUserById(writer http.ResponseWriter, request *htt
 			"useremail": user.Email,
 		})
 }
+
+func (handler *UserHandler) GetAllUsers(writer http.ResponseWriter, request *http.Request){
+         
+     users,err := handler.service.GetAllUsers()
+	 if err!=nil{
+		log.Println("error in handler function while calling service functiion")
+		
+	 }
+		json.NewEncoder(writer).Encode(map[string]interface{}{
+			"message":   "the users are ",
+			 "list of users":users,
+		})
+}

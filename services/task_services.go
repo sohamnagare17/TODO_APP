@@ -76,10 +76,12 @@ func (s *TaskServices) GetTaskByUserId(useridstr string,status string,sortby str
 		if validfields[sortby]{
 			query = query + " ORDER BY " + sortby
 			
-			if order=="ASC" || order=="asc"{
+			if order=="ASC" || order==" asc "{
 				query+=" ASC "
+			}else if order==" desc"|| order==" DESC"{
+				query+=" DESC"
 			}else{
-				query+="DESC"
+				query+=" DESC"
 			}
 		}else{
 			query+= " ORDER BY createdAt DESC"

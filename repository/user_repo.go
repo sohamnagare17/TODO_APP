@@ -42,3 +42,27 @@ func (repo *UserRepository) GetUserById(id int) (models.Users,error){
 
 		return user,nil
 }
+
+func (repo *UserRepository) GetAllUsers()([]models.Users,error){
+	 var userlist []models.Users
+
+		query := `SELECT * FROM users`
+
+		rows, err := repo.db.Query(query)
+
+		if err != nil {
+			log.Println("error in fetching the data from the database", err)
+			return userlist,err
+		}
+
+		for rows.Next() {
+			var user models.Users
+
+			err = rows.Scan(&user.Userid, &user.Email, &user.Username)
+			if err != nil {
+				log.Println("error in scanning the data from the rows", err)
+			}
+			userlist = append(userlist, user)
+		}
+		return userlist,nil
+}
