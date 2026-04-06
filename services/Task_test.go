@@ -1,10 +1,10 @@
 package services
 
 import (
-	"testing"
-     "go-sqlite/models"
+	"go-sqlite/models"
 	"go-sqlite/repository"
 	"go-sqlite/testutils"
+	"testing"
 )
 
 func Getservice() *TaskServices {
@@ -116,151 +116,146 @@ func TestInsertTask_Succes(t *testing.T) {
 		Status: "pending",
 	}
 
-	 err := Getservice().InsertTask(task)
+	err := Getservice().InsertTask(task)
 	if err != nil {
 		t.Errorf("unexpected error occur:%v", err)
 	}
 }
 
-func TestInsertTask_EmptyName(t *testing.T){
+func TestInsertTask_EmptyName(t *testing.T) {
 	task := models.Task{
 		UserId: 1,
 		Name:   "",
 		Status: "pending",
 	}
 
-	 err := Getservice().InsertTask(task)
+	err := Getservice().InsertTask(task)
 	if err == nil {
 		t.Errorf("expected error for empty task name :%v", err)
 	}
 
 }
 
-func TestInsertTask_Invalidstatus(t *testing.T){
+func TestInsertTask_Invalidstatus(t *testing.T) {
 	task := models.Task{
 		UserId: 1,
 		Name:   "play football",
 		Status: "invalid",
 	}
 
-	 err := Getservice().InsertTask(task)
+	err := Getservice().InsertTask(task)
 	if err == nil {
 		t.Errorf("expected error for empty task name :%v", err)
 	}
 
 }
 
-func TestInsertTask_Emptystatus(t *testing.T){
+func TestInsertTask_Emptystatus(t *testing.T) {
 	task := models.Task{
 		UserId: 1,
 		Name:   "football",
 		Status: "",
 	}
 
-	 err := Getservice().InsertTask(task)
+	err := Getservice().InsertTask(task)
 	if err != nil {
 		t.Errorf("unexpected error occur :%v", err)
 	}
 
 }
 
+//deleteTask function
 
-//deleteTask function 
+func TestDeleteTask_succes(t *testing.T) {
 
-func TestDeleteTask_succes(t *testing.T){
-	 
-	err := Getservice().DeleteTask("1","1")
-	if err!=nil{
-		t.Fatalf("unexpected error found:%v",err)
+	err := Getservice().DeleteTask("1", "1")
+	if err != nil {
+		t.Fatalf("unexpected error found:%v", err)
 	}
 
 }
 
-func TestDeleteTask_emptyUserid(t *testing.T){
-	 
-	err := Getservice().DeleteTask("1","")
-	if err==nil{
-		t.Errorf("expected error empty userid:%v",err)
+func TestDeleteTask_emptyUserid(t *testing.T) {
+
+	err := Getservice().DeleteTask("1", "")
+	if err == nil {
+		t.Errorf("expected error empty userid:%v", err)
 	}
 
 }
 
-func TestDeleteTask_emptytaskid(t *testing.T){
-	 
-	err := Getservice().DeleteTask("","1")
-	if err==nil{
-		t.Errorf("expected error empty taskid:%v",err)
+func TestDeleteTask_emptytaskid(t *testing.T) {
+
+	err := Getservice().DeleteTask("", "1")
+	if err == nil {
+		t.Errorf("expected error empty taskid:%v", err)
 	}
 
 }
 
-func TestDeleteTask_invalidTaskid(t *testing.T){
-	 
-	err := Getservice().DeleteTask("abc","1")
-	if err==nil{
-		t.Errorf("expected error invalid task id:%v",err)
+func TestDeleteTask_invalidTaskid(t *testing.T) {
+
+	err := Getservice().DeleteTask("abc", "1")
+	if err == nil {
+		t.Errorf("expected error invalid task id:%v", err)
 	}
 
 }
 
-func TestDeleteTask_NoTask(t *testing.T){
-	err := Getservice().DeleteTask("1","999")
-	if err==nil{
-		t.Errorf("expected error data not found: %v",err)
+func TestDeleteTask_NoTask(t *testing.T) {
+	err := Getservice().DeleteTask("1", "999")
+	if err == nil {
+		t.Errorf("expected error data not found: %v", err)
 	}
 }
 
-// updateTask functionality 
+// updateTask functionality
 
-func TestUpdateTask_success(t *testing.T){
-	err := Getservice().UpdateTask("1","1","Task","done")
-	if err!=nil{
-		t.Errorf("unexcted error :%v",err)
+func TestUpdateTask_success(t *testing.T) {
+	err := Getservice().UpdateTask("1", "1", "Task", "done")
+	if err != nil {
+		t.Errorf("unexcted error :%v", err)
 	}
 }
 
-func TestUpdateTask_invalidUser(t *testing.T){
-	err := Getservice().UpdateTask("abs","1","Task","done")
-	if err==nil{
-		t.Errorf("expected error invalid userid:%v",err)
+func TestUpdateTask_invalidUser(t *testing.T) {
+	err := Getservice().UpdateTask("abs", "1", "Task", "done")
+	if err == nil {
+		t.Errorf("expected error invalid userid:%v", err)
 	}
 }
 
-func TestUpdateTask_invalidid(t *testing.T){
-	err := Getservice().UpdateTask("1","abs","Task","done")
-	if err==nil{
-		t.Errorf("expected error invalid taskid :%v",err)
+func TestUpdateTask_invalidid(t *testing.T) {
+	err := Getservice().UpdateTask("1", "abs", "Task", "done")
+	if err == nil {
+		t.Errorf("expected error invalid taskid :%v", err)
 	}
 }
 
-func TestUpdateTask_emptyName(t *testing.T){
-	err := Getservice().UpdateTask("1","1"," ","")
-	if err==nil{
+func TestUpdateTask_emptyName(t *testing.T) {
+	err := Getservice().UpdateTask("1", "1", " ", "")
+	if err == nil {
 		t.Errorf("expected error for empty name and status ")
 	}
 }
 
-func TestUpdateTask_NotFound(t *testing.T){
-	err := Getservice().UpdateTask("999","999"," ","")
-	if err==nil{
+func TestUpdateTask_NotFound(t *testing.T) {
+	err := Getservice().UpdateTask("999", "999", " ", "")
+	if err == nil {
 		t.Errorf("expected error when task not found")
 	}
 }
 
-func TestUpdateTask_Nameonly(t *testing.T){
-	err := Getservice().UpdateTask("1","1","new task","")
-	if err!=nil{
-		t.Errorf("unexpected error update only name :%v ",err)
+func TestUpdateTask_Nameonly(t *testing.T) {
+	err := Getservice().UpdateTask("1", "1", "new task", "")
+	if err != nil {
+		t.Errorf("unexpected error update only name :%v ", err)
 	}
 }
 
-func TestUpdateTask_statusonly(t *testing.T){
-	err := Getservice().UpdateTask("1","1","","done")
-	if err!=nil{
-		t.Errorf("unexpected error update only status :%v ",err)
+func TestUpdateTask_statusonly(t *testing.T) {
+	err := Getservice().UpdateTask("1", "1", "", "done")
+	if err != nil {
+		t.Errorf("unexpected error update only status :%v ", err)
 	}
 }
-
-
-
-

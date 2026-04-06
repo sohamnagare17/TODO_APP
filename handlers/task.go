@@ -14,8 +14,8 @@ import (
 func GetTaskByUserId(db *sql.DB) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 
-		if request.Method!=http.MethodGet{
-			http.Error(writer,"Invlaid Method type",405)
+		if request.Method != http.MethodGet {
+			http.Error(writer, "Invlaid Method type", 405)
 			log.Println("Invalid method type")
 			return
 		}
@@ -38,40 +38,40 @@ func GetTaskByUserId(db *sql.DB) http.HandlerFunc {
 		}
 
 		validfields := map[string]bool{
-			"name":true,
-			"createdAt":true,
-			"updatedAt":true,
+			"name":      true,
+			"createdAt": true,
+			"updatedAt": true,
 		}
 		query := `SELECT * FROM tasks1 WHERE userid=?`
 		parameters := []interface{}{userid}
 
-		if status!=""{
-			query=query+" AND status=? "
-			parameters = append(parameters,status)
+		if status != "" {
+			query = query + " AND status=? "
+			parameters = append(parameters, status)
 		}
-		
-		if validfields[sortby]{
+
+		if validfields[sortby] {
 			query = query + " ORDER BY " + sortby
-			
-			if order=="ASC" || order=="asc"{
-				query+=" ASC "
-			}else{
-				query+="DESC"
+
+			if order == "ASC" || order == "asc" {
+				query += " ASC "
+			} else {
+				query += "DESC"
 			}
-		}else{
-			query+= " ORDER BY createdAt DESC"
+		} else {
+			query += " ORDER BY createdAt DESC"
 		}
 		log.Println("Query:", query)
-        log.Println("Values:", parameters)
+		log.Println("Values:", parameters)
 
 		rows, err1 := db.Query(query, parameters...)
-		if err1!=nil{
+		if err1 != nil {
 			log.Println("something went wrong in the execution of the database query")
 		}
 		for rows.Next() {
 			var task models.Task
 
-			err = rows.Scan(&task.Id, &task.Name, &task.Status, &task.UserId,&task.CreatedAt,&task.UpdatedAt)
+			err = rows.Scan(&task.Id, &task.Name, &task.Status, &task.UserId, &task.CreatedAt, &task.UpdatedAt)
 			if err1 != nil {
 				log.Println("error in scanning the data from the rows", err)
 			}
@@ -92,8 +92,8 @@ func GetTaskByUserId(db *sql.DB) http.HandlerFunc {
 func InsertTask(db *sql.DB) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 
-		if request.Method!=http.MethodPost{
-			http.Error(writer,"Invalid Method type",405)
+		if request.Method != http.MethodPost {
+			http.Error(writer, "Invalid Method type", 405)
 			log.Println("Invalid Method type")
 			return
 		}
@@ -106,46 +106,46 @@ func InsertTask(db *sql.DB) http.HandlerFunc {
 			http.Error(writer, "invalid userId", http.StatusBadRequest)
 			return
 		}
-		if userID<=0{
+		if userID <= 0 {
 			log.Println("User id must be positive")
-			http.Error(writer,"userid must be positive",400)
+			http.Error(writer, "userid must be positive", 400)
 			return
 		}
 
 		err = json.NewDecoder(request.Body).Decode(&newtask)
 
 		if err != nil {
-			http.Error(writer,"Invalid body or empty body",400)
+			http.Error(writer, "Invalid body or empty body", 400)
 			log.Println("error in fetching the data")
 			return
 		}
-		newtask.Name=strings.TrimSpace(newtask.Name)
-		if newtask.Name==""{
-			http.Error(writer,"Task name should not be empty",400)
+		newtask.Name = strings.TrimSpace(newtask.Name)
+		if newtask.Name == "" {
+			http.Error(writer, "Task name should not be empty", 400)
 			log.Println("Enter a task")
 			return
 		}
-		validstatus:=map[string]bool{
-			"pending":true,
-			"done":true,
+		validstatus := map[string]bool{
+			"pending": true,
+			"done":    true,
 		}
-		newtask.Status=strings.ToLower(strings.TrimSpace(newtask.Status))
+		newtask.Status = strings.ToLower(strings.TrimSpace(newtask.Status))
 		if newtask.Status == "" {
-				newtask.Status = "pending"
+			newtask.Status = "pending"
 		} else if !validstatus[newtask.Status] {
-			http.Error(writer,"Invalid status(done/pending only allowed)",400)
+			http.Error(writer, "Invalid status(done/pending only allowed)", 400)
 			log.Println("Invalid status(done/pending only allowed)")
 			return
 		}
 
 		query := `INSERT INTO tasks1 (name ,status,userid,createdAt,updatedAt) VALUES(?,?,?,?,?)`
-		
+
 		now := time.Now().UTC().Format(time.RFC3339)
 		_, err = db.Exec(query, newtask.Name, newtask.Status, userID, now, now)
 
 		if err != nil {
 			log.Println("somthing went wrong to inserting the data ", err)
-			http.Error(writer,"Error while creating the task",500)
+			http.Error(writer, "Error while creating the task", 500)
 			return
 		}
 		writer.Header().Set("Content-type", "application/json")
@@ -160,8 +160,8 @@ func InsertTask(db *sql.DB) http.HandlerFunc {
 func DeleteTask(db *sql.DB) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 
-		if request.Method!=http.MethodDelete{
-			http.Error(writer,"Invalid Method type",405)
+		if request.Method != http.MethodDelete {
+			http.Error(writer, "Invalid Method type", 405)
 			log.Println("Invalid Method type")
 			return
 		}
@@ -178,21 +178,21 @@ func DeleteTask(db *sql.DB) http.HandlerFunc {
 			log.Println("id must be integer", err)
 			return
 		}
-		if id<=0{
+		if id <= 0 {
 			log.Println("Task id must be positive")
-			http.Error(writer,"Taskid must be positive",400)
+			http.Error(writer, "Taskid must be positive", 400)
 			return
 		}
 
 		userid, err1 := strconv.Atoi(useridstr)
 		if err1 != nil {
 			log.Println("userid must be integer", err1)
-			http.Error(writer,"Invalid user id",400)
+			http.Error(writer, "Invalid user id", 400)
 			return
 		}
-		if userid<=0{
+		if userid <= 0 {
 			log.Println("User id must be positive")
-			http.Error(writer,"UserId must be positive",400)
+			http.Error(writer, "UserId must be positive", 400)
 			return
 		}
 
@@ -202,7 +202,7 @@ func DeleteTask(db *sql.DB) http.HandlerFunc {
 
 		if err != nil {
 			log.Println("error while executing the database query", err)
-			http.Error(writer,"Internal server Error",500)
+			http.Error(writer, "Internal server Error", 500)
 			return
 		}
 
@@ -210,7 +210,7 @@ func DeleteTask(db *sql.DB) http.HandlerFunc {
 
 		if err != nil {
 			log.Println("error in checking rows affected", err)
-			http.Error(writer,"failed to process request",400)
+			http.Error(writer, "failed to process request", 400)
 			return
 		}
 

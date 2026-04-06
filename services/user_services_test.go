@@ -144,78 +144,74 @@ func TestGetAllUsers_EmptyList(t *testing.T) {
 	}
 }
 
-func TestGetAllUsers_NilUsers(t *testing.T){
-	fakerepo:=&FakeUserRepo{
-		 users: nil,
+func TestGetAllUsers_NilUsers(t *testing.T) {
+	fakerepo := &FakeUserRepo{
+		users: nil,
 	}
-	service:=NewUserServices(fakerepo)
-	users,err:=service.GetAllUsers()
+	service := NewUserServices(fakerepo)
+	users, err := service.GetAllUsers()
 
-	if err!=nil{
-		t.Errorf("Unexpected Error got %v",err)
+	if err != nil {
+		t.Errorf("Unexpected Error got %v", err)
 	}
-	if users!=nil{
-		t.Errorf("expected nil errors got %v",users)
+	if users != nil {
+		t.Errorf("expected nil errors got %v", users)
 	}
 }
 
-
-func TestGetUserById_Success(t *testing.T){
-	fakerepo:=&FakeUserRepo{
+func TestGetUserById_Success(t *testing.T) {
+	fakerepo := &FakeUserRepo{
 		users: []models.Users{
-			{Username: "sid",Email: "sid@gmail.com"},
-			{Username: "soham",Email: "soham@gmail.com"},
+			{Username: "sid", Email: "sid@gmail.com"},
+			{Username: "soham", Email: "soham@gmail.com"},
 		},
 	}
-	service:=NewUserServices(fakerepo)
-	user,err:=service.GetUserById("1")
-	if err!=nil{
-		t.Errorf("Unexpected Error got %v",err)
+	service := NewUserServices(fakerepo)
+	user, err := service.GetUserById("1")
+	if err != nil {
+		t.Errorf("Unexpected Error got %v", err)
 	}
-	if user.Username!="soham"{
-		t.Errorf("Expected soham got %v",user.Username)
+	if user.Username != "soham" {
+		t.Errorf("Expected soham got %v", user.Username)
 	}
 }
 
-func TestGetUserById_NotPresent(t *testing.T){
-	fakerepo:=&FakeUserRepo{
+func TestGetUserById_NotPresent(t *testing.T) {
+	fakerepo := &FakeUserRepo{
 		users: []models.Users{
-			{Username: "sid",Email: "sid@gmail.com"},
+			{Username: "sid", Email: "sid@gmail.com"},
 		},
 	}
-	service:=NewUserServices(fakerepo)
-	_,err:=service.GetUserById("1")
-	if err==nil{
+	service := NewUserServices(fakerepo)
+	_, err := service.GetUserById("1")
+	if err == nil {
 		t.Errorf("expected user not found error")
 	}
 }
 
-func TestGetUserById_DBError(t *testing.T){
-	fakerepo:=&FakeUserRepo{
+func TestGetUserById_DBError(t *testing.T) {
+	fakerepo := &FakeUserRepo{
 		err: errors.New("DB error"),
 	}
-	service:=NewUserServices(fakerepo)
-	_,err:=service.GetUserById("1")
-	if err==nil{
+	service := NewUserServices(fakerepo)
+	_, err := service.GetUserById("1")
+	if err == nil {
 		t.Errorf("Expected db error")
 	}
 }
 
-func TestGetUserById_InvalidId(t *testing.T){
-	service,_:=setup()
-	_,err:=service.GetUserById("abc")
-	if err==nil{
+func TestGetUserById_InvalidId(t *testing.T) {
+	service, _ := setup()
+	_, err := service.GetUserById("abc")
+	if err == nil {
 		t.Errorf("Expected Invalid Id error")
 	}
 }
 
-func TestGetUserById_EmptyId(t *testing.T){
-	service,_:=setup()
-	_,err:=service.GetUserById("")
-	if err==nil{
+func TestGetUserById_EmptyId(t *testing.T) {
+	service, _ := setup()
+	_, err := service.GetUserById("")
+	if err == nil {
 		t.Errorf("Expected id required error")
 	}
 }
-
-
-

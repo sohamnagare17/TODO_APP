@@ -11,9 +11,9 @@ type UserRepository struct {
 }
 
 type UserRepo interface {
-    InsertUser(user models.Users) error
-    GetAllUsers() ([]models.Users, error)
-	GetUserById(id int) (models.Users, error) 
+	InsertUser(user models.Users) error
+	GetAllUsers() ([]models.Users, error)
+	GetUserById(id int) (models.Users, error)
 }
 
 func NewUserRepository(db *sql.DB) *UserRepository {
