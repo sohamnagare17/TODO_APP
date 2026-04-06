@@ -124,7 +124,7 @@ func (s *TaskServices) InsertTask(newtask models.Task) error {
 func (s *TaskServices) DeleteTask(idstr string, useridstr string) error {
 	if idstr == "" || useridstr == "" {
 		log.Println("userid and taskid  required plz provide ids")
-		return nil
+		return fmt.Errorf("userid and taskid requried")
 	}
 
 	id, err := strconv.Atoi(idstr)

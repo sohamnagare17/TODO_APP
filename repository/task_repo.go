@@ -5,6 +5,7 @@ import (
 	"go-sqlite/models"
 	"log"
 	"time"
+	"fmt"
 )
 
 type TaskRepository struct {
@@ -76,7 +77,7 @@ func (r *TaskRepository) DeleteTask(id int, userid int) (int64, error) {
 
 	if rowsAffected == 0 {
 		log.Println("task not found ")
-		return 0, nil
+		return 0, fmt.Errorf("task is not found")
 	}
 	return rowsAffected, nil
 }
@@ -105,6 +106,10 @@ func (r *TaskRepository) UpdateTask(userid, taskid int, name, status string) (in
 			SET status=?, updatedAt=CURRENT_TIMESTAMP
 			WHERE id=? AND userid=?`
 		res, err = r.db.Exec(query, status, taskid, userid)
+
+
+	 default :
+	    return 0,fmt.Errorf("nothing to update")
 	}
 
 	if err != nil {

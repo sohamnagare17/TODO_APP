@@ -165,3 +165,102 @@ func TestInsertTask_Emptystatus(t *testing.T){
 }
 
 
+//deleteTask function 
+
+func TestDeleteTask_succes(t *testing.T){
+	 
+	err := Getservice().DeleteTask("1","1")
+	if err!=nil{
+		t.Fatalf("unexpected error found:%v",err)
+	}
+
+}
+
+func TestDeleteTask_emptyUserid(t *testing.T){
+	 
+	err := Getservice().DeleteTask("1","")
+	if err==nil{
+		t.Errorf("expected error empty userid:%v",err)
+	}
+
+}
+
+func TestDeleteTask_emptytaskid(t *testing.T){
+	 
+	err := Getservice().DeleteTask("","1")
+	if err==nil{
+		t.Errorf("expected error empty taskid:%v",err)
+	}
+
+}
+
+func TestDeleteTask_invalidTaskid(t *testing.T){
+	 
+	err := Getservice().DeleteTask("abc","1")
+	if err==nil{
+		t.Errorf("expected error invalid task id:%v",err)
+	}
+
+}
+
+func TestDeleteTask_NoTask(t *testing.T){
+	err := Getservice().DeleteTask("1","999")
+	if err==nil{
+		t.Errorf("expected error data not found: %v",err)
+	}
+}
+
+// updateTask functionality 
+
+func TestUpdateTask_success(t *testing.T){
+	err := Getservice().UpdateTask("1","1","Task","done")
+	if err!=nil{
+		t.Errorf("unexcted error :%v",err)
+	}
+}
+
+func TestUpdateTask_invalidUser(t *testing.T){
+	err := Getservice().UpdateTask("abs","1","Task","done")
+	if err==nil{
+		t.Errorf("expected error invalid userid:%v",err)
+	}
+}
+
+func TestUpdateTask_invalidid(t *testing.T){
+	err := Getservice().UpdateTask("1","abs","Task","done")
+	if err==nil{
+		t.Errorf("expected error invalid taskid :%v",err)
+	}
+}
+
+func TestUpdateTask_emptyName(t *testing.T){
+	err := Getservice().UpdateTask("1","1"," ","")
+	if err==nil{
+		t.Errorf("expected error for empty name and status ")
+	}
+}
+
+func TestUpdateTask_NotFound(t *testing.T){
+	err := Getservice().UpdateTask("999","999"," ","")
+	if err==nil{
+		t.Errorf("expected error when task not found")
+	}
+}
+
+func TestUpdateTask_Nameonly(t *testing.T){
+	err := Getservice().UpdateTask("1","1","new task","")
+	if err!=nil{
+		t.Errorf("unexpected error update only name :%v ",err)
+	}
+}
+
+func TestUpdateTask_statusonly(t *testing.T){
+	err := Getservice().UpdateTask("1","1","","done")
+	if err!=nil{
+		t.Errorf("unexpected error update only status :%v ",err)
+	}
+}
+
+
+
+
