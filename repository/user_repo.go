@@ -10,6 +10,12 @@ type UserRepository struct {
 	db *sql.DB
 }
 
+type UserRepo interface {
+    InsertUser(user models.Users) error
+    GetAllUsers() ([]models.Users, error)
+	GetUserById(id int) (models.Users, error) 
+}
+
 func NewUserRepository(db *sql.DB) *UserRepository {
 	return &UserRepository{db: db}
 }
@@ -23,7 +29,6 @@ func (repo *UserRepository) InsertUser(newuser models.Users) error {
 		log.Println("error while inserting the user ", err)
 		return err
 	}
-
 	return nil
 }
 

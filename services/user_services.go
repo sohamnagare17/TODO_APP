@@ -1,6 +1,7 @@
 package services
 
 import (
+	"errors"
 	"go-sqlite/models"
 	"go-sqlite/repository"
 	"log"
@@ -10,10 +11,10 @@ import (
 )
 
 type UserServices struct {
-	repo *repository.UserRepository
+	repo repository.UserRepo
 }
 
-func NewUserServices(repo *repository.UserRepository) *UserServices {
+func NewUserServices(repo repository.UserRepo) *UserServices {
 	return &UserServices{repo: repo}
 }
 
@@ -21,38 +22,38 @@ func (userserv *UserServices) InsertUser(newuser models.Users) error {
 	if newuser.Username == "" && newuser.Email == "" {
 
 		log.Println("username and email required ")
-		return nil
+		return errors.New("Username and Email required")
 	}
 	if newuser.Username == "" {
 
 		log.Println("username required ")
-		return nil
+		return errors.New("Username is required")
 	}
 	if newuser.Email == "" {
 		//http.Error(writer, "Email  Required", 400)
 		log.Println("Email required ")
-		return nil
+		return errors.New("Email is required")
 	}
 
 	if strings.TrimSpace(newuser.Username) == "" {
 		//http.Error(writer, "Username Required", 400)
 		log.Println("Username Required")
-		return nil
+		return errors.New("Username is required")
 	}
 	if strings.TrimSpace(newuser.Email) == "" {
 
 		log.Println("Email is required")
-		return nil
+		return errors.New("Email is Required")
 	}
 	_, err := mail.ParseAddress(newuser.Email)
 	if err != nil {
 		//http.Error(writer, "Invalid Email", http.StatusBadRequest)
 		log.Println("Enter a valid Email")
-		return err
+		return errors.New("Enter a valid email")
 	}
 	if len(newuser.Username) < 2 {
 		//http.Error(writer, "Name should greater than 2 characters", 400)
-		return nil
+		return errors.New("Username is too short")
 	}
 	return userserv.repo.InsertUser(newuser)
 }
@@ -63,7 +64,7 @@ func (userserv *UserServices) GetUserById(idstr string) (models.Users, error) {
 
 	if idstr == "" {
 		log.Println("Id required")
-		return user, nil
+		return user, errors.New("Id is required")
 	}
 
 	id, err := strconv.Atoi(idstr)
