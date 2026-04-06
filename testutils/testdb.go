@@ -83,10 +83,10 @@ func createTable(db *sql.DB) {
 // 		"Task 3", "pending", 2, now, now,
 // 	)
 
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// }
+//		if err != nil {
+//			log.Fatal(err)
+//		}
+//	}
 func insertTestData(db *sql.DB) {
 
 	now := time.Now().UTC()

@@ -2,7 +2,7 @@ package services
 
 import (
 	"testing"
-
+     "go-sqlite/models"
 	"go-sqlite/repository"
 	"go-sqlite/testutils"
 )
@@ -15,6 +15,7 @@ func Getservice() *TaskServices {
 
 }
 
+// gettaskuserbyid function
 func TestGetTaskByUserId_Success(t *testing.T) {
 
 	service := Getservice()
@@ -106,3 +107,61 @@ func TestGetTaskByUserId_Nodata(t *testing.T) {
 		t.Errorf("expecting 0 tasks but got :%d", len(tasks))
 	}
 }
+
+// inserttask function
+func TestInsertTask_Succes(t *testing.T) {
+	task := models.Task{
+		UserId: 1,
+		Name:   "new task",
+		Status: "pending",
+	}
+
+	 err := Getservice().InsertTask(task)
+	if err != nil {
+		t.Errorf("unexpected error occur:%v", err)
+	}
+}
+
+func TestInsertTask_EmptyName(t *testing.T){
+	task := models.Task{
+		UserId: 1,
+		Name:   "",
+		Status: "pending",
+	}
+
+	 err := Getservice().InsertTask(task)
+	if err == nil {
+		t.Errorf("expected error for empty task name :%v", err)
+	}
+
+}
+
+func TestInsertTask_Invalidstatus(t *testing.T){
+	task := models.Task{
+		UserId: 1,
+		Name:   "play football",
+		Status: "invalid",
+	}
+
+	 err := Getservice().InsertTask(task)
+	if err == nil {
+		t.Errorf("expected error for empty task name :%v", err)
+	}
+
+}
+
+func TestInsertTask_Emptystatus(t *testing.T){
+	task := models.Task{
+		UserId: 1,
+		Name:   "football",
+		Status: "",
+	}
+
+	 err := Getservice().InsertTask(task)
+	if err != nil {
+		t.Errorf("unexpected error occur :%v", err)
+	}
+
+}
+
+

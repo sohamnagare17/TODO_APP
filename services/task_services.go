@@ -107,7 +107,7 @@ func (s *TaskServices) InsertTask(newtask models.Task) error {
 	if newtask.Name == "" {
 
 		log.Println("Enter a task")
-		return nil
+		return fmt.Errorf("enter task name!")
 	}
 
 	newtask.Status = strings.ToLower(strings.TrimSpace(newtask.Status))
@@ -116,7 +116,7 @@ func (s *TaskServices) InsertTask(newtask models.Task) error {
 	} else if !validstatus[newtask.Status] {
 
 		log.Println("Invalid status(done/pending only allowed)")
-		return nil
+		return fmt.Errorf("invalid status ")
 	}
 	return s.repo.InsertTask(newtask)
 }
