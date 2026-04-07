@@ -30,6 +30,8 @@ func (h *TaskHandler) GetTaskByUserId(writer http.ResponseWriter, request *http.
 	tasks, err := h.service.GetTaskByUserId(useridstr, status, sortby, order, cursor, limitstr, pagenostr)
 	if err != nil {
 		log.Println("error in service function call", err)
+		http.Error(writer, err.Error(), http.StatusBadRequest)
+		return
 	}
 
 	json.NewEncoder(writer).Encode(map[string]interface{}{
@@ -88,8 +90,9 @@ func (h *TaskHandler) DeleteTask(writer http.ResponseWriter, request *http.Reque
 
 	err := h.service.DeleteTask(idstr, useridstr)
 	if err != nil {
-		log.Println("error in passing the data to the services")
-		return
+		log.Println("error in passing the data to the services",err)
+		http.Error(writer,"invalid parameters",400)
+		return 
 	}
 
 	json.NewEncoder(writer).Encode(map[string]interface{}{
