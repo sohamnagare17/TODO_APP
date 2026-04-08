@@ -260,7 +260,7 @@ func TestDeleteTask_Nodata(t *testing.T){
 
 	  handler.DeleteTask(recorder, request)
 
-	  if recorder.Code != http.StatusBadRequest{
+	  if recorder.Code != http.StatusInternalServerError{
           t.Fatalf("expected 400 status code but got %d",recorder.Code)
 	  }
 

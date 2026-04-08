@@ -216,3 +216,188 @@ func TestDeleteTask_InvalidIDs(t *testing.T) {
 		t.Errorf("Expected 400 got %d", w.Code)
 	}
 }
+
+
+
+func TestUpdateTask_Success(t *testing.T) {
+	service := &MockService{}
+	handler := NewTaskHandler(service)
+
+	body := `{"name":"new task","status":"done"}`
+
+	req := httptest.NewRequest("PATCH", "/users/1/tasks/1", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	req.SetPathValue("userid", "1")
+	req.SetPathValue("taskid", "1")
+
+	w := httptest.NewRecorder()
+
+	handler.UpdateTask(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected 200 got %d", w.Code)
+	}
+}
+func TestUpdateTask_InvalidMethod(t *testing.T) {
+	service := &MockService{}
+	handler := NewTaskHandler(service)
+
+	req := httptest.NewRequest("GET", "/users/1/tasks/1", nil)
+
+	w := httptest.NewRecorder()
+
+	handler.UpdateTask(w, req)
+
+	if w.Code != http.StatusMethodNotAllowed {
+		t.Errorf("Expected 405 got %d", w.Code)
+	}
+}
+func TestUpdateTask_InvalidJSON(t *testing.T) {
+	service := &MockService{}
+	handler := NewTaskHandler(service)
+
+	body := `invalid json`
+
+	req := httptest.NewRequest("PATCH", "/users/1/tasks/1", strings.NewReader(body))
+	req.SetPathValue("userid", "1")
+	req.SetPathValue("taskid", "1")
+
+	w := httptest.NewRecorder()
+
+	handler.UpdateTask(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("Expected 400 got %d", w.Code)
+	}
+}
+func TestUpdateTask_EmptyBody(t *testing.T) {
+	service := &MockService{}
+	handler := NewTaskHandler(service)
+
+	req := httptest.NewRequest("PATCH", "/users/1/tasks/1", nil)
+	req.SetPathValue("userid", "1")
+	req.SetPathValue("taskid", "1")
+
+	w := httptest.NewRecorder()
+
+	handler.UpdateTask(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("Expected 400 got %d", w.Code)
+	}
+}
+func TestUpdateTask_ServiceError(t *testing.T) {
+	service := &MockService{
+		err: fmt.Errorf("update failed"),
+	}
+	handler := NewTaskHandler(service)
+
+	body := `{"name":"new task","status":"done"}`
+
+	req := httptest.NewRequest("PATCH", "/users/1/tasks/1", strings.NewReader(body))
+	req.SetPathValue("userid", "1")
+	req.SetPathValue("taskid", "1")
+
+	w := httptest.NewRecorder()
+
+	handler.UpdateTask(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("Expected 400 got %d", w.Code)
+	}
+}
+func TestUpdateTask_MissingIDs(t *testing.T) {
+	service := &MockService{}
+	handler := NewTaskHandler(service)
+	body := `{"name":"new task","status":"done"}`
+	req := httptest.NewRequest("PATCH", "/users//tasks/", strings.NewReader(body))
+	w := httptest.NewRecorder()
+	handler.UpdateTask(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("Expected 400 got %d", w.Code)
+	}
+}
+
+
+func TestGetTaskByUserId_Success(t *testing.T) {
+	service := &MockService{
+		tasks: []models.Task{
+			{Name: "task1", Status: "pending"},
+		},
+	}
+	handler := NewTaskHandler(service)
+
+	req := httptest.NewRequest("GET", "/users/1/tasks?status=pending", nil)
+	req.SetPathValue("userid", "1")
+
+	w := httptest.NewRecorder()
+
+	handler.GetTaskByUserId(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected 200 got %d", w.Code)
+	}
+}
+func TestGetTaskByUserId_ServiceError(t *testing.T) {
+	service := &MockService{
+		err: fmt.Errorf("failed to fetch"),
+	}
+	handler := NewTaskHandler(service)
+
+	req := httptest.NewRequest("GET", "/users/1/tasks", nil)
+	req.SetPathValue("userid", "1")
+
+	w := httptest.NewRecorder()
+
+	handler.GetTaskByUserId(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("Expected 400 got %d", w.Code)
+	}
+}
+
+func TestGetTaskByUserId_WithQueryParams(t *testing.T) {
+	service := &MockService{
+		tasks: []models.Task{
+			{Name: "task1"},
+		},
+	}
+	handler := NewTaskHandler(service)
+	req := httptest.NewRequest(
+		"GET",
+		"/users/1/tasks?status=done&sortby=createdAt&order=desc&limit=10&pageno=2",
+		nil,
+	)
+	req.SetPathValue("userid", "1")
+	w := httptest.NewRecorder()
+	handler.GetTaskByUserId(w, req)
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected 200 got %d", w.Code)
+	}
+}
+
+func TestGetTaskByUserId_EmptyResult(t *testing.T) {
+	service := &MockService{
+		tasks: []models.Task{},
+	}
+	handler := NewTaskHandler(service)
+	req := httptest.NewRequest("GET", "/users/1/tasks", nil)
+	req.SetPathValue("userid", "1")
+	w := httptest.NewRecorder()
+	handler.GetTaskByUserId(w, req)
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected 200 got %d", w.Code)
+	}
+}
+func TestGetTaskByUserId_MissingUserID(t *testing.T) {
+	service := &MockService{}
+	handler := NewTaskHandler(service)
+	req := httptest.NewRequest("GET", "/users//tasks", nil)
+	w := httptest.NewRecorder()
+	handler.GetTaskByUserId(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("Expected 400 got %d", w.Code)
+	}
+}

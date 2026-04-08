@@ -27,6 +27,11 @@ func (h *TaskHandler) GetTaskByUserId(writer http.ResponseWriter, request *http.
 	limitstr := request.URL.Query().Get("limit")
 	pagenostr := request.URL.Query().Get("pageno")
 
+	if useridstr == "" {
+		http.Error(writer, "missing userid", http.StatusBadRequest)
+		return
+	}
+
 	tasks, err := h.service.GetTaskByUserId(useridstr, status, sortby, order, cursor, limitstr, pagenostr)
 	if err != nil {
 		log.Println("error in service function call", err)
@@ -112,7 +117,7 @@ func (h *TaskHandler) DeleteTask(writer http.ResponseWriter, request *http.Reque
 	err = h.service.DeleteTask(idstr, useridstr)
 	if err != nil {
 		log.Println("error in passing the data to the services",err)
-		http.Error(writer,"invalid parameters",400)
+		http.Error(writer,"invalid parameters",http.StatusInternalServerError)
 		return 
 	}
 
@@ -143,6 +148,10 @@ func (h *TaskHandler) UpdateTask(writer http.ResponseWriter, request *http.Reque
 		http.Error(writer, "Invalid body", 400)
 		return
 	}
+	if userid == "" || taskid == "" {
+		http.Error(writer, "missing id", http.StatusBadRequest)
+		return
+	}
 
 	err = h.service.UpdateTask(userid, taskid, reqbody.Name, reqbody.Status)
 	if err != nil {
@@ -154,3 +163,5 @@ func (h *TaskHandler) UpdateTask(writer http.ResponseWriter, request *http.Reque
 		"message": "task updated successfully",
 	})
 }
+
+
