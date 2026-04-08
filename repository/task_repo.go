@@ -2,10 +2,10 @@ package repository
 
 import (
 	"database/sql"
+	"fmt"
 	"go-sqlite/models"
 	"log"
 	"time"
-	"fmt"
 )
 
 type TaskRepository struct {
@@ -114,9 +114,8 @@ func (r *TaskRepository) UpdateTask(userid, taskid int, name, status string) (in
 			WHERE id=? AND userid=?`
 		res, err = r.db.Exec(query, status, taskid, userid)
 
-
-	 default :
-	    return 0,fmt.Errorf("nothing to update")
+	default:
+		return 0, fmt.Errorf("nothing to update")
 	}
 
 	if err != nil {

@@ -64,7 +64,7 @@ func (s *TaskServices) GetTaskByUserId(useridstr string, status string, sortby s
 
 	userid, err := strconv.Atoi(useridstr)
 	if err != nil {
-		log.Println("id must be the number")
+		log.Println("id must be the number",err)
 		return nil, err
 	}
 	query := `SELECT * FROM tasks1 WHERE userid=?`
