@@ -7,17 +7,17 @@ import (
 	"testing"
 )
 
-func TestInsertUser_Success(t *testing.T){
-	db:=testutils.SetupTestDb()
+func TestInsertUser_Success(t *testing.T) {
+	db := testutils.SetupTestDb()
 	defer db.Close()
-	repo:=NewUserRepository(db)
-	user:=models.Users{
+	repo := NewUserRepository(db)
+	user := models.Users{
 		Username: "Sid",
-		Email: "sid@gmail.com",
+		Email:    "sid@gmail.com",
 	}
-	err:=repo.InsertUser(user)
-	if err!=nil{
-		t.Errorf("Unexpected Error got %v",err)
+	err := repo.InsertUser(user)
+	if err != nil {
+		t.Errorf("Unexpected Error got %v", err)
 	}
 }
 func TestInsertUser_DuplicateEmail(t *testing.T) {
@@ -48,8 +48,8 @@ func TestInsertUser_MultipleUsers(t *testing.T) {
 			Username: fmt.Sprintf("userr%d", i),
 			Email:    fmt.Sprintf("userrr%d&gmail.com", i),
 		})
-		if err!=nil{
-			t.Errorf("Unexpected error %v",err)
+		if err != nil {
+			t.Errorf("Unexpected error %v", err)
 		}
 	}
 }
@@ -57,18 +57,17 @@ func TestInsertUser_DBClosed(t *testing.T) {
 	db := testutils.SetupTestDb()
 
 	repo := NewUserRepository(db)
-	db.Close() 
+	db.Close()
 
 	err := repo.InsertUser(models.Users{
 		Username: "sid",
 		Email:    "sid@gmail.com",
 	})
 
-	if err==nil{
+	if err == nil {
 		t.Errorf("Expected error when Db is closed")
 	}
 }
-
 
 func TestGetAllUsers_Success(t *testing.T) {
 	db := testutils.SetupTestDb()
@@ -127,14 +126,13 @@ func TestGetAllUsers_TableNotExist(t *testing.T) {
 func TestGetAllUsers_DBClosed(t *testing.T) {
 	db := testutils.SetupTestDb()
 	repo := NewUserRepository(db)
-	db.Close() 
+	db.Close()
 	_, err := repo.GetAllUsers()
 
 	if err == nil {
 		t.Errorf("expected error when DB is closed")
 	}
 }
-
 
 func TestGetUserById_Success(t *testing.T) {
 	db := testutils.SetupTestDb()

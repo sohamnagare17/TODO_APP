@@ -12,7 +12,7 @@ type TaskRepository struct {
 	db *sql.DB
 }
 
-type TaskRepo interface{
+type TaskRepo interface {
 	GetTaskByUserId(query string, params []interface{}) ([]models.Task, error)
 	InsertTask(newtask models.Task) error
 	DeleteTask(id int, userid int) (int64, error)

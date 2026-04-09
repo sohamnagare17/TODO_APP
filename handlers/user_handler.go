@@ -27,18 +27,23 @@ func (handler *UserHandler) InsertUser(writer http.ResponseWriter, request *http
 	var newuser models.Users
 
 	err := json.NewDecoder(request.Body).Decode(&newuser)
+
 	if err != nil {
 		http.Error(writer, "error in fetching the data", 400)
 		log.Println("error in fetching the data")
 		return
 	}
-	if newuser.Username==""||newuser.Email==""{
-		http.Error(writer,"empty fields",400)
+
+	if newuser.Username == "" || newuser.Email == "" {
+
+		http.Error(writer, "empty fields", 400)
+		return
 	}
 	err = handler.service.InsertUser(newuser)
+	log.Println("error", err)
 	if err != nil {
-		log.Println("error in service function calling ",err)
-		http.Error(writer, "empty username or the email or may be both", 500)
+		log.Println("error in service function calling ", err)
+		http.Error(writer, "empty username or the email or may be both", 400)
 		return
 	}
 	json.NewEncoder(writer).Encode(map[string]interface{}{
@@ -48,8 +53,8 @@ func (handler *UserHandler) InsertUser(writer http.ResponseWriter, request *http
 
 func (handler *UserHandler) GetUserById(writer http.ResponseWriter, request *http.Request) {
 
-	if request.Method!=http.MethodGet{
-		http.Error(writer,"Invalid method",http.StatusMethodNotAllowed)
+	if request.Method != http.MethodGet {
+		http.Error(writer, "Invalid method", http.StatusMethodNotAllowed)
 		return
 	}
 	idstr := request.PathValue("userid")
@@ -58,34 +63,43 @@ func (handler *UserHandler) GetUserById(writer http.ResponseWriter, request *htt
 		return
 	}
 	user, err := handler.service.GetUserById(idstr)
+	//log.Println("here ===",err)
+
 	if err != nil {
 		log.Println("error in fetching data in handler function", err)
-		http.Error(writer,"error",500)
-	 if err.Error()=="sql: no rows in result set"{
-		http.Error(writer,"user not found", http.StatusNotFound)
-		return
-	 }else{
-		http.Error(writer,"bad request",http.StatusBadRequest)
-		return
-	 }
+		if err.Error() == "sql: no rows in result set" {
+			http.Error(writer, "user not found", http.StatusNotFound)
+		} else if err.Error() == "failed" {
+			http.Error(writer, "error in service ", 500)
+			return
+		} else {
+
+			http.Error(writer, "bad request", http.StatusBadRequest)
+		}
 
 	}
+
+	if user.Userid == 0 {
+		log.Println("bad request")
+		http.Error(writer, "empty user", http.StatusBadRequest)
+		return
+	}
+
 	log.Println(user.Userid)
 	json.NewEncoder(writer).Encode(user)
 }
 
 func (handler *UserHandler) GetAllUsers(writer http.ResponseWriter, request *http.Request) {
 
-	if request.Method!=http.MethodGet{
-		http.Error(writer,"Invalid method type",http.StatusMethodNotAllowed)
+	if request.Method != http.MethodGet {
+		http.Error(writer, "Invalid method type", http.StatusMethodNotAllowed)
 		return
 	}
-
 
 	users, err := handler.service.GetAllUsers()
 	if err != nil {
 		log.Println("error in handler function while calling service function")
-		http.Error(writer,"Failed to fetch Users",500)
+		http.Error(writer, "Failed to fetch Users", 500)
 	}
 	json.NewEncoder(writer).Encode(map[string]interface{}{
 		"message":       "the users are ",

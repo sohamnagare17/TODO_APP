@@ -64,7 +64,7 @@ func (s *TaskServices) GetTaskByUserId(useridstr string, status string, sortby s
 
 	userid, err := strconv.Atoi(useridstr)
 	if err != nil {
-		log.Println("id must be the number",err)
+		log.Println("id must be the number", err)
 		return nil, err
 	}
 	query := `SELECT * FROM tasks1 WHERE userid=?`
@@ -151,7 +151,7 @@ func (s *TaskServices) DeleteTask(idstr string, useridstr string) error {
 		log.Println("error while executing the database query", err)
 		return err
 	}
-	if rows==0{
+	if rows == 0 {
 		return fmt.Errorf("Task not found")
 	}
 	return nil
@@ -193,6 +193,3 @@ func (s *TaskServices) UpdateTask(useridStr, taskidStr, name, status string) err
 
 	return nil
 }
-
-
-
