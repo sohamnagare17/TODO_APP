@@ -88,6 +88,7 @@ func (userserv *UserServices) GetUserById(idstr string) (models.Users, error) {
 	}
 	return user, nil
 }
+
 func (userserv *UserServices) GetAllUsers() ([]models.Users, error) {
 	return userserv.repo.GetAllUsers()
 }

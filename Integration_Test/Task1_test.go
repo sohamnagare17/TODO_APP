@@ -358,7 +358,114 @@ func TestGetUserById_EmptyId(t *testing.T) {
 	}
 }
 
+// insertUser 
+func TestInsertUser_Success(t *testing.T){
+	db := testutils.SetupTestDb()
 
+	handler := GetUserHandler(db)
+    body := `{"username":"soham","email":"soham@gmail.com"}`
+
+	req := httptest.NewRequest(http.MethodPost,"/user", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+
+	
+
+	recorder := httptest.NewRecorder()
+
+	handler.InsertUser(recorder, req)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("expected 200 statusok but got %d",recorder.Code)
+	}
+
+	rows, _ := db.Query("SELECT username FROM  users WHERE email='soham@gmail.com'")
+
+	if !rows.Next(){
+		t.Errorf("user is not inserted yet ")
+	}
+}
+
+func TestInsertUser_EmptyEmail(t *testing.T){
+	db := testutils.SetupTestDb()
+
+	handler := GetUserHandler(db)
+    body := `{"username":"soham","email":""}`
+
+	req := httptest.NewRequest(http.MethodPost,"/user", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+
+	
+
+	recorder := httptest.NewRecorder()
+
+	handler.InsertUser(recorder, req)
+
+	if recorder.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 statusBAdrequest but got %d",recorder.Code)
+	}
+
+}
+
+func TestInsertUser_EmptyUsername(t *testing.T){
+	db := testutils.SetupTestDb()
+
+	handler := GetUserHandler(db)
+    body := `{"username":"","email":"soham@gmail.com"}`
+
+	req := httptest.NewRequest(http.MethodPost,"/user", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+
+	
+
+	recorder := httptest.NewRecorder()
+
+	handler.InsertUser(recorder, req)
+
+	if recorder.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 statusBAdrequest but got %d",recorder.Code)
+	}
+
+}
+
+func TestInsertUser_InvalidEmail(t *testing.T){
+	db := testutils.SetupTestDb()
+
+	handler := GetUserHandler(db)
+    body := `{"username":"soham","email":"abc.gmail"}`
+
+	req := httptest.NewRequest(http.MethodPost,"/user", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+
+	
+
+	recorder := httptest.NewRecorder()
+
+	handler.InsertUser(recorder, req)
+
+	if recorder.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 statusBAdrequest but got %d",recorder.Code)
+	}
+
+}
+
+//GetAllUsers
+
+func TestGetAllUSers_success(t *testing.T){
+	db := testutils.SetupTestDb()
+	handler := GetUserHandler(db)
+
+	req := httptest.NewRequest(http.MethodGet,"/users", nil)
+	req.Header.Set("Content-Type", "application/json")
+
+	recorder := httptest.NewRecorder()
+
+	handler.GetAllUsers(recorder,req)
+
+	if recorder.Code!= http.StatusOK{
+		t.Fatalf("expected 200 but got %d",recorder.Code)
+	}
+
+}
 
 
 
