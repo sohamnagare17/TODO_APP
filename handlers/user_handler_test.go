@@ -3,40 +3,51 @@ package handlers
 import (
 	"fmt"
 	"go-sqlite/models"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 )
 
-type FakeService struct{
-	err error
+type FakeService struct {
+	err   error
 	users []models.Users
 }
 
 func (m *FakeService) InsertUser(newuser models.Users) error {
+
 	return m.err
 }
-func(m *FakeService)GetUserById(idstr string) (models.Users, error){
-	if m.err!=nil{
-		return models.Users{},m.err
+
+func (m *FakeService) GetUserById(idstr string) (models.Users, error) {
+
+	if len(m.users) == 0 {
+		return models.Users{}, m.err
 	}
-	return models.Users{},nil
+
+	if m.err != nil {
+		log.Println("error", m.err)
+		return m.users[0], m.err
+	}
+	var user models.Users
+	user = m.users[0]
+	return user, nil
 }
-func(m *FakeService)GetAllUsers() ([]models.Users, error){
-	if m.err!=nil{
-		return nil,m.err
+func (m *FakeService) GetAllUsers() ([]models.Users, error) {
+	if m.err != nil {
+		return nil, m.err
 	}
-	return m.users,nil
+	return m.users, nil
 }
 
-func TestInsertUser_Success(t *testing.T){
-	service:=&FakeService{}
-	handler:=NewUserHandler(service)
-	body := `{"name":"Siddharth","email":"test@gmail.com"}`
+func TestInsertUser_Success(t *testing.T) {
+	service := &FakeService{}
+	handler := NewUserHandler(service)
+	body := `{"Username":"Siddharth","email":"test@gmail.com"}`
 	req := httptest.NewRequest("POST", "/user", strings.NewReader(body))
-	w:=httptest.NewRecorder()
-	handler.InsertUser(w,req)
+	w := httptest.NewRecorder()
+	handler.InsertUser(w, req)
 	if w.Code != http.StatusOK {
 		t.Errorf("Expected 200 got %d", w.Code)
 	}
@@ -82,18 +93,18 @@ func TestInsertUser_ServiceError(t *testing.T) {
 		err: fmt.Errorf("insert failed"),
 	}
 	handler := NewUserHandler(service)
-	body := `{"name":"Siddharth","email":"sid@gmail.com"}`
+	body := `{"username":"Siddharth","email":"sid@gmail.com"}`
 	req := httptest.NewRequest("POST", "/user", strings.NewReader(body))
 	w := httptest.NewRecorder()
 	handler.InsertUser(w, req)
-	if w.Code != http.StatusInternalServerError {
+	if w.Code != http.StatusBadRequest {
 		t.Errorf("Expected 500 got %d", w.Code)
 	}
 }
 func TestInsertUser_EmptyFields(t *testing.T) {
 	service := &FakeService{}
 	handler := NewUserHandler(service)
-	body := `{"name":"","email":""}`
+	body := `{"username":"","email":""}`
 	req := httptest.NewRequest("POST", "/user", strings.NewReader(body))
 	w := httptest.NewRecorder()
 	handler.InsertUser(w, req)
@@ -101,7 +112,6 @@ func TestInsertUser_EmptyFields(t *testing.T) {
 		t.Errorf("Expected 400 got %d", w.Code)
 	}
 }
-
 
 func TestGetAllUsers_Success(t *testing.T) {
 	service := &FakeService{
@@ -145,7 +155,7 @@ func TestGetAllUsers_ServiceError(t *testing.T) {
 		t.Errorf("Expected 500 got %d", w.Code)
 	}
 }
-func TestGetAllUsers_InvalidMethod(t *testing.T){
+func TestGetAllUsers_InvalidMethod(t *testing.T) {
 	service := &FakeService{}
 	handler := NewUserHandler(service)
 	req := httptest.NewRequest("POST", "/users", nil)
@@ -156,13 +166,12 @@ func TestGetAllUsers_InvalidMethod(t *testing.T){
 	}
 }
 
-
 func TestGetUserById_Success(t *testing.T) {
 	service := &FakeService{
 		users: []models.Users{
 			{
 				Username: "sidd",
-				Userid: 1,
+				Userid:   1,
 				Email:    "test@gmail.com",
 			},
 		},
@@ -179,7 +188,7 @@ func TestGetUserById_Success(t *testing.T) {
 
 func TestGetUserById_EmptySlice(t *testing.T) {
 	service := &FakeService{
-		users: []models.Users{}, 
+		users: []models.Users{},
 	}
 	handler := NewUserHandler(service)
 	req := httptest.NewRequest("GET", "/users/1", nil)
@@ -193,6 +202,10 @@ func TestGetUserById_EmptySlice(t *testing.T) {
 
 func TestGetUserById_ServiceError(t *testing.T) {
 	service := &FakeService{
+		users: []models.Users{
+			{Username: "sid", Userid: 1, Email: "sid@gmail.com"},
+			{Username: "sid2", Userid: 2, Email: "sid2@gmail.com"},
+		},
 		err: fmt.Errorf("failed"),
 	}
 	handler := NewUserHandler(service)

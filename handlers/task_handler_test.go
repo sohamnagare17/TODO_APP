@@ -10,50 +10,50 @@ import (
 )
 
 type MockService struct {
-	err error
+	err   error
 	tasks []models.Task
 }
 
-func (m *MockService) InsertTask(newtask models.Task)error{
-	return  m.err
-}
-func(m *MockService)DeleteTask(idstr string, useridstr string) error{
+func (m *MockService) InsertTask(newtask models.Task) error {
 	return m.err
 }
-func (m *MockService)UpdateTask(useridStr, taskidStr, name, status string) error{
+func (m *MockService) DeleteTask(idstr string, useridstr string) error {
 	return m.err
 }
-func (m *MockService)GetTaskByUserId(useridstr string, status string, sortby string, order string, cursor string, limitstr string, pagenostr string) ([]models.Task, error){
-	if m.err!=nil{
-		return  nil,m.err
+func (m *MockService) UpdateTask(useridStr, taskidStr, name, status string) error {
+	return m.err
+}
+func (m *MockService) GetTaskByUserId(useridstr string, status string, sortby string, order string, cursor string, limitstr string, pagenostr string) ([]models.Task, error) {
+	if m.err != nil {
+		return nil, m.err
 	}
-	return m.tasks,nil
+	return m.tasks, nil
 }
 
-func TestInsertTask_Success(t *testing.T){
-	service:=&MockService{}
-	handler:=NewTaskHandler(service)
-	body:=`{"name":"learn c","status":"pending"}`
-	req:=httptest.NewRequest("POST","/users/{userid}/tasks",strings.NewReader(body))
-	req.Header.Set("Content-Type","application/json")
+func TestInsertTask_Success(t *testing.T) {
+	service := &MockService{}
+	handler := NewTaskHandler(service)
+	body := `{"name":"learn c","status":"pending"}`
+	req := httptest.NewRequest("POST", "/users/{userid}/tasks", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
 
 	req.SetPathValue("userid", "1")
-	w:=httptest.NewRecorder()
-	handler.InsertTask(w,req)
-	if w.Code!=http.StatusOK{
-		t.Errorf("expected 200 got %d",w.Code)
+	w := httptest.NewRecorder()
+	handler.InsertTask(w, req)
+	if w.Code != http.StatusOK {
+		t.Errorf("expected 200 got %d", w.Code)
 	}
 }
-func TestInsertTask_InvalidJson(t *testing.T){
-	service:=&MockService{}
-	handler:=NewTaskHandler(service)
-	body:=`invalid json`
-	req:=httptest.NewRequest("POST","/users/{userid}/tasks",strings.NewReader(body))
-	req.Header.Set("Content-Type","application/json")
+func TestInsertTask_InvalidJson(t *testing.T) {
+	service := &MockService{}
+	handler := NewTaskHandler(service)
+	body := `invalid json`
+	req := httptest.NewRequest("POST", "/users/{userid}/tasks", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
 
-	req.SetPathValue("userid","1")
-	w:=httptest.NewRecorder()
-	handler.InsertTask(w,req)
+	req.SetPathValue("userid", "1")
+	w := httptest.NewRecorder()
+	handler.InsertTask(w, req)
 
 }
 func TestInsertTask_EmptyBody(t *testing.T) {
@@ -127,19 +127,18 @@ func TestInsertTask_EmptyStatus(t *testing.T) {
 	}
 }
 
-
-func TestDeleteTask_Success(t *testing.T){
-	service:=&MockService{}
-	handler:=NewTaskHandler(service)
-	body:=``
-	req:=httptest.NewRequest("DELETE","/users/1/tasks/1",strings.NewReader(body))
-	req.Header.Set("Content-type","application/json")
-	req.SetPathValue("userid","1")
-	req.SetPathValue("taskid","1")
-	w:=httptest.NewRecorder()
-	handler.DeleteTask(w,req)
-	if w.Code!=http.StatusOK{
-		t.Errorf("Expected 200 got %d",w.Code)
+func TestDeleteTask_Success(t *testing.T) {
+	service := &MockService{}
+	handler := NewTaskHandler(service)
+	body := ``
+	req := httptest.NewRequest("DELETE", "/users/1/tasks/1", strings.NewReader(body))
+	req.Header.Set("Content-type", "application/json")
+	req.SetPathValue("userid", "1")
+	req.SetPathValue("taskid", "1")
+	w := httptest.NewRecorder()
+	handler.DeleteTask(w, req)
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected 200 got %d", w.Code)
 	}
 }
 func TestDeleteTask_ServiceError(t *testing.T) {
@@ -216,8 +215,6 @@ func TestDeleteTask_InvalidIDs(t *testing.T) {
 		t.Errorf("Expected 400 got %d", w.Code)
 	}
 }
-
-
 
 func TestUpdateTask_Success(t *testing.T) {
 	service := &MockService{}
@@ -318,7 +315,6 @@ func TestUpdateTask_MissingIDs(t *testing.T) {
 		t.Errorf("Expected 400 got %d", w.Code)
 	}
 }
-
 
 func TestGetTaskByUserId_Success(t *testing.T) {
 	service := &MockService{

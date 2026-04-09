@@ -8,143 +8,140 @@ import (
 
 type FakeTaskRepo struct {
 	tasks []models.Task
-	err error
-	rows int64
+	err   error
+	rows  int64
 }
 
 func (f *FakeTaskRepo) InsertTask(newtask models.Task) error {
-	if f.err!=nil{
-		return  f.err
+	if f.err != nil {
+		return f.err
 	}
-	f.tasks=append(f.tasks, newtask)
+	f.tasks = append(f.tasks, newtask)
 	return nil
 }
-func (f *FakeTaskRepo)DeleteTask(taskid int, userid int) (int64, error){	
-	if f.err!=nil{
-		return 0,f.err
+func (f *FakeTaskRepo) DeleteTask(taskid int, userid int) (int64, error) {
+	if f.err != nil {
+		return 0, f.err
 	}
-	return f.rows,nil
+	return f.rows, nil
 }
-func(f *FakeTaskRepo)UpdateTask(userid, taskid int, name, status string) (int64, error){
-	if f.err!=nil{
-		return  0,f.err
+func (f *FakeTaskRepo) UpdateTask(userid, taskid int, name, status string) (int64, error) {
+	if f.err != nil {
+		return 0, f.err
 	}
-	return f.rows,nil
+	return f.rows, nil
 }
-func(f *FakeTaskRepo)GetTaskByUserId(query string, params []interface{}) ([]models.Task, error){
+func (f *FakeTaskRepo) GetTaskByUserId(query string, params []interface{}) ([]models.Task, error) {
 	if f.err != nil {
 		return nil, f.err
 	}
 	return f.tasks, nil
 }
 
-
-func TestInsertTask_Success(t *testing.T){
-	mockrepo:=&FakeTaskRepo{}
-	service:=NewTaskServices(mockrepo)
-	task:=models.Task{
-		Name: "Learn Go-lang",
+func TestInsertTask_Success(t *testing.T) {
+	mockrepo := &FakeTaskRepo{}
+	service := NewTaskServices(mockrepo)
+	task := models.Task{
+		Name:   "Learn Go-lang",
 		Status: "pending",
 	}
-	err:=service.InsertTask(task)
-	if err!=nil{
-		t.Errorf("Unexpected error got %v",err)
+	err := service.InsertTask(task)
+	if err != nil {
+		t.Errorf("Unexpected error got %v", err)
 	}
-	if len(mockrepo.tasks)!=1{
-		t.Errorf("Expected 1 task got %d",len(mockrepo.tasks))
+	if len(mockrepo.tasks) != 1 {
+		t.Errorf("Expected 1 task got %d", len(mockrepo.tasks))
 	}
 }
-func TestInsertTask_Emptyname(t *testing.T){
-	mockrepo:=&FakeTaskRepo{}
-	service:=NewTaskServices(mockrepo)
-	task:=models.Task{
-		Name:"",
+func TestInsertTask_Emptyname(t *testing.T) {
+	mockrepo := &FakeTaskRepo{}
+	service := NewTaskServices(mockrepo)
+	task := models.Task{
+		Name:   "",
 		Status: "pending",
 	}
-	err:=service.InsertTask(task)
-	if err==nil{
+	err := service.InsertTask(task)
+	if err == nil {
 		t.Errorf("Expected error")
 	}
 }
-func TestInsertTask_EmptyFields(t *testing.T){
+func TestInsertTask_EmptyFields(t *testing.T) {
 
-	mockrepo:=&FakeTaskRepo{}
-	service:=NewTaskServices(mockrepo)
-	task:=models.Task{}
-	err:=service.InsertTask(task)
-	if err==nil{
+	mockrepo := &FakeTaskRepo{}
+	service := NewTaskServices(mockrepo)
+	task := models.Task{}
+	err := service.InsertTask(task)
+	if err == nil {
 		t.Errorf("Expected error")
 	}
 }
-func TestInsertTask_EmptyStatus(t *testing.T){
-	mockrepo:=&FakeTaskRepo{}
-	service:=NewTaskServices(mockrepo)
-	task:=models.Task{
-		Name: "learning java",
+func TestInsertTask_EmptyStatus(t *testing.T) {
+	mockrepo := &FakeTaskRepo{}
+	service := NewTaskServices(mockrepo)
+	task := models.Task{
+		Name:   "learning java",
 		Status: "",
 	}
-	err:=service.InsertTask(task)
-	if err!=nil{
-		t.Errorf("Unexpected Error got %v",err)
+	err := service.InsertTask(task)
+	if err != nil {
+		t.Errorf("Unexpected Error got %v", err)
 	}
-	if len(mockrepo.tasks)!=1{
-		t.Errorf("Expected 1 task got %d",len(mockrepo.tasks))
+	if len(mockrepo.tasks) != 1 {
+		t.Errorf("Expected 1 task got %d", len(mockrepo.tasks))
 	}
 }
-func TestInsertTask_RepoError(t *testing.T){
+func TestInsertTask_RepoError(t *testing.T) {
 
-	mockrepo:=&FakeTaskRepo{
-		err:errors.New("DB Error"),
+	mockrepo := &FakeTaskRepo{
+		err: errors.New("DB Error"),
 	}
-	service:=NewTaskServices(mockrepo)
-	task:=models.Task{
-		Name: "Learning cpp",
+	service := NewTaskServices(mockrepo)
+	task := models.Task{
+		Name:   "Learning cpp",
 		Status: "pending",
 	}
-	err:=service.InsertTask(task)
-	if err==nil{
+	err := service.InsertTask(task)
+	if err == nil {
 		t.Errorf("Expected error from repo got nil")
 	}
 
-
 }
-func TestInsertTask_SpacesInNames(t *testing.T){
-	mockrepo:=&FakeTaskRepo{}
-	service:=NewTaskServices(mockrepo)
-	task:=models.Task{
-		Name:"       ",
+func TestInsertTask_SpacesInNames(t *testing.T) {
+	mockrepo := &FakeTaskRepo{}
+	service := NewTaskServices(mockrepo)
+	task := models.Task{
+		Name:   "       ",
 		Status: "pending",
 	}
-	err:=service.InsertTask(task)
-	if err==nil{
+	err := service.InsertTask(task)
+	if err == nil {
 		t.Errorf("expected Error got nil")
 	}
 }
 
-
-func TestDeleteTask_Success(t *testing.T){
-	mockrepo:=&FakeTaskRepo{
+func TestDeleteTask_Success(t *testing.T) {
+	mockrepo := &FakeTaskRepo{
 		rows: 1,
 	}
-	service:=NewTaskServices(mockrepo)
-	err:=service.DeleteTask("10","1")
-	if err!=nil{
-		t.Errorf("Unexpected error got %v",err)
+	service := NewTaskServices(mockrepo)
+	err := service.DeleteTask("10", "1")
+	if err != nil {
+		t.Errorf("Unexpected error got %v", err)
 	}
 }
-func TestDeleteTask_EmptyTaskId(t *testing.T){
-	mockrepo:=&FakeTaskRepo{}
-	service:=NewTaskServices(mockrepo)
-	err:=service.DeleteTask("","1")
-	if err==nil{
+func TestDeleteTask_EmptyTaskId(t *testing.T) {
+	mockrepo := &FakeTaskRepo{}
+	service := NewTaskServices(mockrepo)
+	err := service.DeleteTask("", "1")
+	if err == nil {
 		t.Errorf("Expected error from empty TaskId")
 	}
 }
-func TestDeleteTask_EmptyUserId(t *testing.T){
-	mockrepo:=&FakeTaskRepo{}
-	service:=NewTaskServices(mockrepo)
-	err:=service.DeleteTask("10","")
-	if err==nil{
+func TestDeleteTask_EmptyUserId(t *testing.T) {
+	mockrepo := &FakeTaskRepo{}
+	service := NewTaskServices(mockrepo)
+	err := service.DeleteTask("10", "")
+	if err == nil {
 		t.Errorf("Expected Error from empty UserId")
 	}
 }
@@ -160,7 +157,7 @@ func TestDeleteTask_BothEmpty(t *testing.T) {
 }
 func TestDeleteTask_No_Task(t *testing.T) {
 	mockrepo := &FakeTaskRepo{
-		rows: 0, 
+		rows: 0,
 	}
 	service := NewTaskServices(mockrepo)
 	err := service.DeleteTask("1", "10")
@@ -168,32 +165,31 @@ func TestDeleteTask_No_Task(t *testing.T) {
 		t.Errorf("Expected error when no task found, got nil")
 	}
 }
-func TestDeleteTask_InvalidTaskid(t *testing.T){
-	mockrepo:=&FakeTaskRepo{}
-	service:=NewTaskServices(mockrepo)
-	err:=service.DeleteTask("abc","1")
-	if err==nil{
+func TestDeleteTask_InvalidTaskid(t *testing.T) {
+	mockrepo := &FakeTaskRepo{}
+	service := NewTaskServices(mockrepo)
+	err := service.DeleteTask("abc", "1")
+	if err == nil {
 		t.Errorf("Expected error got nil")
 	}
 }
-func TestDeleteTask_InvalidUserId(t *testing.T){
-	mockrepo:=&FakeTaskRepo{}
-	service:=NewTaskServices(mockrepo)
-	err:=service.DeleteTask("5","xyz")
-	if err==nil{
+func TestDeleteTask_InvalidUserId(t *testing.T) {
+	mockrepo := &FakeTaskRepo{}
+	service := NewTaskServices(mockrepo)
+	err := service.DeleteTask("5", "xyz")
+	if err == nil {
 		t.Errorf("Expected error got nil")
 	}
 }
 
-
-func TestUpdateTask_Success(t *testing.T){
-	mockrepo:=&FakeTaskRepo{
+func TestUpdateTask_Success(t *testing.T) {
+	mockrepo := &FakeTaskRepo{
 		rows: 1,
 	}
-	service:=NewTaskServices(mockrepo)
-	err:=service.UpdateTask("1","1","newtask","done")
-	if err!=nil{
-		t.Errorf("Unexpected error got %v",err)
+	service := NewTaskServices(mockrepo)
+	err := service.UpdateTask("1", "1", "newtask", "done")
+	if err != nil {
+		t.Errorf("Unexpected error got %v", err)
 	}
 }
 func TestUpdateTask_NoRows(t *testing.T) {
@@ -206,11 +202,11 @@ func TestUpdateTask_NoRows(t *testing.T) {
 		t.Errorf("Expected error when no rows updated")
 	}
 }
-func TestUpdateTask_EmptyName(t *testing.T){
-	mockrepo:=&FakeTaskRepo{}
-	service:=NewTaskServices(mockrepo)
-	err:=service.UpdateTask("1","1","","done")
-	if err==nil{
+func TestUpdateTask_EmptyName(t *testing.T) {
+	mockrepo := &FakeTaskRepo{}
+	service := NewTaskServices(mockrepo)
+	err := service.UpdateTask("1", "1", "", "done")
+	if err == nil {
 		t.Errorf("Expected error got nil")
 	}
 }

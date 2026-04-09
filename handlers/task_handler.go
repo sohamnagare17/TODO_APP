@@ -108,7 +108,7 @@ func (h *TaskHandler) DeleteTask(writer http.ResponseWriter, request *http.Reque
 		return
 	}
 
-	_, err= strconv.Atoi(useridstr)
+	_, err = strconv.Atoi(useridstr)
 	if err != nil {
 		http.Error(writer, "invalid user id", http.StatusBadRequest)
 		return
@@ -116,9 +116,9 @@ func (h *TaskHandler) DeleteTask(writer http.ResponseWriter, request *http.Reque
 
 	err = h.service.DeleteTask(idstr, useridstr)
 	if err != nil {
-		log.Println("error in passing the data to the services",err)
-		http.Error(writer,"invalid parameters",http.StatusInternalServerError)
-		return 
+		log.Println("error in passing the data to the services", err)
+		http.Error(writer, "invalid parameters", http.StatusInternalServerError)
+		return
 	}
 
 	json.NewEncoder(writer).Encode(map[string]interface{}{
@@ -163,5 +163,3 @@ func (h *TaskHandler) UpdateTask(writer http.ResponseWriter, request *http.Reque
 		"message": "task updated successfully",
 	})
 }
-
-

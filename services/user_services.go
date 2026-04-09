@@ -2,20 +2,20 @@ package services
 
 import (
 	"errors"
+	"fmt"
 	"go-sqlite/models"
 	"go-sqlite/repository"
 	"log"
 	"net/mail"
 	"strconv"
 	"strings"
-	"fmt"
 )
 
 type UserServices struct {
 	repo repository.UserRepo
 }
 
-type UserService interface{
+type UserService interface {
 	InsertUser(newuser models.Users) error
 	GetUserById(idstr string) (models.Users, error)
 	GetAllUsers() ([]models.Users, error)
@@ -54,7 +54,7 @@ func (userserv *UserServices) InsertUser(newuser models.Users) error {
 	}
 	_, err := mail.ParseAddress(newuser.Email)
 	if err != nil {
-		//http.Error(writer, "Invalid Email", http.StatusBadRequest)
+
 		log.Println("Enter a valid Email")
 		return errors.New("Enter a valid email")
 	}

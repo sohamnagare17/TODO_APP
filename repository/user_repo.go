@@ -39,7 +39,7 @@ func (repo *UserRepository) GetUserById(id int) (models.Users, error) {
 	err1 := repo.db.QueryRow(query, id).Scan(&user.Userid, &user.Username, &user.Email)
 
 	if err1 != nil {
-		log.Println("error in executing database query",err1)
+		log.Println("error in executing database query", err1)
 		return user, err1
 	}
 
