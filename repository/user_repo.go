@@ -40,7 +40,7 @@ func (repo *UserRepository) GetUserById(id int) (models.Users, error) {
 
 	if err1 != nil {
 		log.Println("error in executing database query")
-		return user, nil
+		return user, err1
 	}
 
 	return user, nil
@@ -61,7 +61,7 @@ func (repo *UserRepository) GetAllUsers() ([]models.Users, error) {
 	for rows.Next() {
 		var user models.Users
 
-		err = rows.Scan(&user.Userid, &user.Email, &user.Username)
+		err = rows.Scan(&user.Userid, &user.Username, &user.Email)
 		if err != nil {
 			log.Println("error in scanning the data from the rows", err)
 		}
