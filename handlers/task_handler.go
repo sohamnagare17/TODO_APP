@@ -10,10 +10,10 @@ import (
 )
 
 type TaskHandler struct {
-	service *services.TaskServices
+	service services.TaskService
 }
 
-func NewTaskHandler(service *services.TaskServices) *TaskHandler {
+func NewTaskHandler(service services.TaskService) *TaskHandler {
 	return &TaskHandler{service: service}
 }
 
@@ -26,6 +26,11 @@ func (h *TaskHandler) GetTaskByUserId(writer http.ResponseWriter, request *http.
 	cursor := request.URL.Query().Get("cursor")
 	limitstr := request.URL.Query().Get("limit")
 	pagenostr := request.URL.Query().Get("pageno")
+
+	if useridstr == "" {
+		http.Error(writer, "missing userid", http.StatusBadRequest)
+		return
+	}
 
 	tasks, err := h.service.GetTaskByUserId(useridstr, status, sortby, order, cursor, limitstr, pagenostr)
 	if err != nil {
@@ -59,22 +64,28 @@ func (h *TaskHandler) InsertTask(writer http.ResponseWriter, request *http.Reque
 	}
 	if userID <= 0 {
 		log.Println("User id must be positive")
-		http.Error(writer, "userid must be positive", 400)
+		http.Error(writer, "userid must be positive", http.StatusBadRequest)
 		return
 	}
-
 	err = json.NewDecoder(request.Body).Decode(&newtask)
-
 	if err != nil {
-		http.Error(writer, "Invalid body or empty body", 400)
+		http.Error(writer, "Invalid body or empty body", http.StatusBadRequest)
 		log.Println("error in fetching the data")
 		return
 	}
+	if newtask.Name == "" {
+		http.Error(writer, "name is required", http.StatusBadRequest)
+		return
+	}
+	if newtask.Status == "" {
+		http.Error(writer, "name is required", http.StatusBadRequest)
+		return
+	}
 	newtask.UserId = userID
-
 	err = h.service.InsertTask(newtask)
 	if err != nil {
 		log.Println("error in service function calling ")
+		http.Error(writer, "Invalid body or empty body", http.StatusInternalServerError)
 		return
 	}
 	json.NewEncoder(writer).Encode(map[string]interface{}{
@@ -87,11 +98,26 @@ func (h *TaskHandler) InsertTask(writer http.ResponseWriter, request *http.Reque
 func (h *TaskHandler) DeleteTask(writer http.ResponseWriter, request *http.Request) {
 	idstr := request.PathValue("taskid")
 	useridstr := request.PathValue("userid")
+	if idstr == "" || useridstr == "" {
+		http.Error(writer, "missing id", http.StatusBadRequest)
+		return
+	}
+	_, err := strconv.Atoi(idstr)
+	if err != nil {
+		http.Error(writer, "invalid task id", http.StatusBadRequest)
+		return
+	}
 
-	err := h.service.DeleteTask(idstr, useridstr)
+	_, err= strconv.Atoi(useridstr)
+	if err != nil {
+		http.Error(writer, "invalid user id", http.StatusBadRequest)
+		return
+	}
+
+	err = h.service.DeleteTask(idstr, useridstr)
 	if err != nil {
 		log.Println("error in passing the data to the services",err)
-		http.Error(writer,"invalid parameters",400)
+		http.Error(writer,"invalid parameters",http.StatusInternalServerError)
 		return 
 	}
 
@@ -122,6 +148,10 @@ func (h *TaskHandler) UpdateTask(writer http.ResponseWriter, request *http.Reque
 		http.Error(writer, "Invalid body", 400)
 		return
 	}
+	if userid == "" || taskid == "" {
+		http.Error(writer, "missing id", http.StatusBadRequest)
+		return
+	}
 
 	err = h.service.UpdateTask(userid, taskid, reqbody.Name, reqbody.Status)
 	if err != nil {
@@ -133,3 +163,5 @@ func (h *TaskHandler) UpdateTask(writer http.ResponseWriter, request *http.Reque
 		"message": "task updated successfully",
 	})
 }
+
+

@@ -12,6 +12,13 @@ type TaskRepository struct {
 	db *sql.DB
 }
 
+type TaskRepo interface{
+	GetTaskByUserId(query string, params []interface{}) ([]models.Task, error)
+	InsertTask(newtask models.Task) error
+	DeleteTask(id int, userid int) (int64, error)
+	UpdateTask(userid, taskid int, name, status string) (int64, error)
+}
+
 func NewTaskRepository(db *sql.DB) *TaskRepository {
 	return &TaskRepository{db: db}
 }

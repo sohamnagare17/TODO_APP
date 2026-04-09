@@ -21,10 +21,17 @@ var validstatus = map[string]bool{
 }
 
 type TaskServices struct {
-	repo *repository.TaskRepository
+	repo repository.TaskRepo
 }
 
-func NewTaskServices(repo *repository.TaskRepository) *TaskServices {
+type TaskService interface {
+	InsertTask(task models.Task) error
+	DeleteTask(idstr string, useridstr string) error
+	UpdateTask(useridStr, taskidStr, name, status string) error
+	GetTaskByUserId(useridstr, status, sortby, order, cursor, limitstr, pagenostr string) ([]models.Task, error)
+}
+
+func NewTaskServices(repo repository.TaskRepo) *TaskServices {
 	return &TaskServices{repo: repo}
 }
 
@@ -139,10 +146,13 @@ func (s *TaskServices) DeleteTask(idstr string, useridstr string) error {
 		return err1
 	}
 
-	_, err = s.repo.DeleteTask(id, userid)
+	rows, err := s.repo.DeleteTask(id, userid)
 	if err != nil {
 		log.Println("error while executing the database query", err)
 		return err
+	}
+	if rows==0{
+		return fmt.Errorf("Task not found")
 	}
 	return nil
 
@@ -183,3 +193,6 @@ func (s *TaskServices) UpdateTask(useridStr, taskidStr, name, status string) err
 
 	return nil
 }
+
+
+

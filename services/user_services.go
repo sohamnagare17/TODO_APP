@@ -15,6 +15,12 @@ type UserServices struct {
 	repo repository.UserRepo
 }
 
+type UserService interface{
+	InsertUser(newuser models.Users) error
+	GetUserById(idstr string) (models.Users, error)
+	GetAllUsers() ([]models.Users, error)
+}
+
 func NewUserServices(repo repository.UserRepo) *UserServices {
 	return &UserServices{repo: repo}
 }
