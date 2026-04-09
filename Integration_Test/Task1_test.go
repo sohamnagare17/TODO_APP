@@ -15,7 +15,7 @@ import(
 	
 )
 
-func GetHandler(db *sql.DB) *handlers.TaskHandler {
+func GetTaskHandler(db *sql.DB) *handlers.TaskHandler {
 	//db := testutils.SetupTestDb()
 	repo := repository.NewTaskRepository(db)
 	service := services.NewTaskServices(repo)
@@ -24,9 +24,18 @@ func GetHandler(db *sql.DB) *handlers.TaskHandler {
 
 }
 
+func GetUserHandler (db * sql.DB) *handlers.UserHandler{
+
+	repo := repository.NewUserRepository(db)
+	service := services.NewUserServices(repo)
+	handler :=handlers.NewUserHandler(service)
+	return handler 
+}
+
+//insertTask
 func TestInsertTask(t *testing.T){
 	db := testutils.SetupTestDb()
-	handler := GetHandler(db)
+	handler := GetTaskHandler(db)
     body := `{"Name":"task 1","Status":"pending"}`
 
 	req := httptest.NewRequest(http.MethodPost,"/users/1/tasks", strings.NewReader(body))
@@ -62,7 +71,7 @@ func TestInsertTask(t *testing.T){
 // GetTaskByUserId
 func TestGetTaskUserId(t *testing.T){
 	db := testutils.SetupTestDb()
-	handler := GetHandler(db)
+	handler := GetTaskHandler(db)
 
 
 	request := httptest.NewRequest(http.MethodGet,"/users/1/tasks",nil)
@@ -82,7 +91,7 @@ func TestGetTaskUserId(t *testing.T){
 
 func TestGetTaskUserId_invalidUserid(t *testing.T){
 	db := testutils.SetupTestDb()
-	handler := GetHandler(db)
+	handler := GetTaskHandler(db)
 
 
 	request := httptest.NewRequest(http.MethodGet,"/users/abc/tasks",nil)
@@ -102,7 +111,7 @@ func TestGetTaskUserId_invalidUserid(t *testing.T){
 
 func TestGetTaskUserId_bystatus(t *testing.T){
 	db := testutils.SetupTestDb()
-	handler := GetHandler(db)
+	handler := GetTaskHandler(db)
 
 
 	request := httptest.NewRequest(http.MethodGet,"/users/1/tasks?status=pending",nil)
@@ -141,7 +150,7 @@ func TestGetTaskUserId_bystatus(t *testing.T){
 
 func TestGetTaskUserId_limitandoffset(t *testing.T){
 	db := testutils.SetupTestDb()
-	handler := GetHandler(db)
+	handler := GetTaskHandler(db)
 
 
 	request := httptest.NewRequest(http.MethodGet,"/users/1/tasks?limit=1&page=1",nil)
@@ -179,7 +188,7 @@ func TestGetTaskUserId_limitandoffset(t *testing.T){
 
 func TestDeleteTask_success(t *testing.T){
 	db := testutils.SetupTestDb();
-	  handler := GetHandler(db)
+	  handler := GetTaskHandler(db)
 	  
 
 	  request := httptest.NewRequest(http.MethodDelete,"/users/1/tasks/1",nil)
@@ -205,7 +214,7 @@ func TestDeleteTask_success(t *testing.T){
 
 func TestDeleteTask_invaliduserid(t *testing.T){
 	db := testutils.SetupTestDb();
-	  handler := GetHandler(db)
+	  handler := GetTaskHandler(db)
 	  
 
 	  request := httptest.NewRequest(http.MethodDelete,"/users/abs/tasks/1",nil)
@@ -226,7 +235,7 @@ func TestDeleteTask_invaliduserid(t *testing.T){
 
 func TestDeleteTask_invalidtaskid(t *testing.T){
 	db := testutils.SetupTestDb();
-	  handler := GetHandler(db)
+	  handler := GetTaskHandler(db)
 	  
 
 	  request := httptest.NewRequest(http.MethodDelete,"/users/1/tasks/abs",nil)
@@ -247,7 +256,7 @@ func TestDeleteTask_invalidtaskid(t *testing.T){
 
 func TestDeleteTask_Nodata(t *testing.T){
 	db := testutils.SetupTestDb();
-	  handler := GetHandler(db)
+	  handler := GetTaskHandler(db)
 	  
 
 	  request := httptest.NewRequest(http.MethodDelete,"/users/999/tasks/1",nil)
@@ -265,6 +274,95 @@ func TestDeleteTask_Nodata(t *testing.T){
 	  }
 
 }
+
+//GetUserById
+func TestGetUserById_Success(t *testing.T) {
+
+	db := testutils.SetupTestDb()
+
+	handler := GetUserHandler(db)
+
+	req := httptest.NewRequest(http.MethodGet, "/users/1", nil)
+	req.SetPathValue("userid", "1")
+
+	rec := httptest.NewRecorder()
+
+	handler.GetUserById(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200 got %d", rec.Code)
+	}
+
+	var user models.Users
+	err := json.Unmarshal(rec.Body.Bytes(), &user)
+	if err != nil {
+		t.Fatalf("invalid response: %v", err)
+	}
+
+	if user.Userid != 1 {
+		t.Errorf("expected user id 1, got %d", user.Userid)
+	}
+}
+
+func TestGetUserById_NotFound(t *testing.T) {
+
+	db := testutils.SetupTestDb()
+
+	handler := GetUserHandler(db)
+
+	req := httptest.NewRequest(http.MethodGet, "/users/99", nil)
+	req.SetPathValue("userid", "99")
+
+	rec := httptest.NewRecorder()
+
+	handler.GetUserById(rec, req)
+    
+	if rec.Code != http.StatusNotFound{
+		t.Errorf("expected 404 user not found but we got %d",rec.Code)
+	}
+}
+
+func TestGetUserById_InvalidId(t *testing.T) {
+
+	db := testutils.SetupTestDb()
+
+	handler := GetUserHandler(db)
+
+	req := httptest.NewRequest(http.MethodGet, "/users/abc", nil)
+	req.SetPathValue("userid", "abc")
+
+	rec := httptest.NewRecorder()
+
+	handler.GetUserById(rec, req)
+    
+	if rec.Code != http.StatusBadRequest{
+		t.Errorf("expected 400 bad request but we got %d",rec.Code)
+	}
+}
+
+func TestGetUserById_EmptyId(t *testing.T) {
+
+	db := testutils.SetupTestDb()
+
+	handler := GetUserHandler(db)
+
+	req := httptest.NewRequest(http.MethodGet, "/users/", nil)
+	req.SetPathValue("userid", "")
+
+	rec := httptest.NewRecorder()
+
+	handler.GetUserById(rec, req)
+    
+	if rec.Code != http.StatusBadRequest{
+		t.Errorf("expected 400 user not found but we got %d",rec.Code)
+	}
+}
+
+
+
+
+
+
 
 
 

@@ -8,6 +8,7 @@ import (
 	"net/mail"
 	"strconv"
 	"strings"
+	"fmt"
 )
 
 type UserServices struct {
@@ -76,10 +77,11 @@ func (userserv *UserServices) GetUserById(idstr string) (models.Users, error) {
 	if id <= 0 {
 
 		log.Println(" Enter a positive number for the UserId")
-		return user, nil
+		return user, fmt.Errorf("invalid user id ")
 	}
 
 	user, err = userserv.repo.GetUserById(id)
+	log.Println(user.Userid)
 	if err != nil {
 		log.Println("error in fetching the user in service function", err)
 		return user, err
