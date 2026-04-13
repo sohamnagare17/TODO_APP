@@ -1,9 +1,12 @@
 package repository
 
 import (
+	"context"
 	"database/sql"
 	"go-sqlite/models"
 	"log"
+
+	"go.opentelemetry.io/otel"
 )
 
 type UserRepository struct {
@@ -12,7 +15,7 @@ type UserRepository struct {
 
 type UserRepo interface {
 	InsertUser(user models.Users) error
-	GetAllUsers() ([]models.Users, error)
+	GetAllUsers(context.Context) ([]models.Users, error)
 	GetUserById(id int) (models.Users, error)
 }
 
@@ -46,14 +49,17 @@ func (repo *UserRepository) GetUserById(id int) (models.Users, error) {
 	return user, nil
 }
 
-func (repo *UserRepository) GetAllUsers() ([]models.Users, error) {
+func (repo *UserRepository) GetAllUsers(ctx context.Context) ([]models.Users, error) {
+	
+	tracer:=otel.Tracer("user-repository")
+	ctx,span:=tracer.Start(ctx,"DB: GetAllUsers")
+	defer span.End()
+
 	var userlist []models.Users
-
 	query := `SELECT * FROM users`
-
-	rows, err := repo.db.Query(query)
-
+	rows, err := repo.db.QueryContext(ctx,query)
 	if err != nil {
+		span.RecordError(err)
 		log.Println("error in fetching the data from the database", err)
 		return userlist, err
 	}
@@ -63,6 +69,7 @@ func (repo *UserRepository) GetAllUsers() ([]models.Users, error) {
 
 		err = rows.Scan(&user.Userid, &user.Username, &user.Email)
 		if err != nil {
+			span.RecordError(err)
 			log.Println("error in scanning the data from the rows", err)
 		}
 		userlist = append(userlist, user)

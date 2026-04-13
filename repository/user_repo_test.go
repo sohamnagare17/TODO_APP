@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"fmt"
 	"go-sqlite/models"
 	"go-sqlite/testutils"
@@ -73,7 +74,8 @@ func TestGetAllUsers_Success(t *testing.T) {
 	db := testutils.SetupTestDb()
 	defer db.Close()
 	repo := NewUserRepository(db)
-	users, err := repo.GetAllUsers()
+	ctx:=context.Background()
+	users, err := repo.GetAllUsers(ctx)
 	if err != nil {
 		t.Errorf("unexpected error %v", err)
 	}
@@ -93,7 +95,8 @@ func TestGetAllUsers_Empty(t *testing.T) {
 		t.Fatalf("failed to delete users: %v", err)
 	}
 	repo := NewUserRepository(db)
-	users, err := repo.GetAllUsers()
+	ctx:=context.Background()
+	users, err := repo.GetAllUsers(ctx)
 	if err != nil {
 		t.Errorf("unexpected error %v", err)
 	}

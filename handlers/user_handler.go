@@ -6,6 +6,8 @@ import (
 	"go-sqlite/services"
 	"log"
 	"net/http"
+
+	"go.opentelemetry.io/otel"
 )
 
 type UserHandler struct {
@@ -23,7 +25,6 @@ func (handler *UserHandler) InsertUser(writer http.ResponseWriter, request *http
 		log.Println("Invalid Method type")
 		return
 	}
-
 	var newuser models.Users
 
 	err := json.NewDecoder(request.Body).Decode(&newuser)
@@ -96,7 +97,11 @@ func (handler *UserHandler) GetAllUsers(writer http.ResponseWriter, request *htt
 		return
 	}
 
-	users, err := handler.service.GetAllUsers()
+	tracer:=otel.Tracer("user-handler")
+	ctx,span:=tracer.Start(request.Context(),"GET /user")
+	defer span.End()
+
+	users, err := handler.service.GetAllUsers(ctx)
 	if err != nil {
 		log.Println("error in handler function while calling service function")
 		http.Error(writer, "Failed to fetch Users", 500)

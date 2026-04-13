@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"go-sqlite/models"
@@ -9,6 +10,8 @@ import (
 	"net/mail"
 	"strconv"
 	"strings"
+
+	"go.opentelemetry.io/otel"
 )
 
 type UserServices struct {
@@ -18,7 +21,7 @@ type UserServices struct {
 type UserService interface {
 	InsertUser(newuser models.Users) error
 	GetUserById(idstr string) (models.Users, error)
-	GetAllUsers() ([]models.Users, error)
+	GetAllUsers(context.Context) ([]models.Users, error)
 }
 
 func NewUserServices(repo repository.UserRepo) *UserServices {
@@ -95,6 +98,10 @@ func (userserv *UserServices) GetUserById(idstr string) (models.Users, error) {
 	return user, nil
 }
 
-func (userserv *UserServices) GetAllUsers() ([]models.Users, error) {
-	return userserv.repo.GetAllUsers()
+func (userserv *UserServices) GetAllUsers(ctx context.Context) ([]models.Users, error) {
+
+	tracer:=otel.Tracer("user-services")
+	ctx,span:=tracer.Start(ctx,"GetAllUsersService")
+	defer span.End()
+	return userserv.repo.GetAllUsers(ctx)
 }
