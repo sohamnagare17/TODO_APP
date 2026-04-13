@@ -6,6 +6,8 @@ import (
 	"go-sqlite/models"
 	"log"
 	"time"
+	"context"
+	"go.opentelemetry.io/otel"
 )
 
 type TaskRepository struct {
@@ -13,7 +15,7 @@ type TaskRepository struct {
 }
 
 type TaskRepo interface {
-	GetTaskByUserId(query string, params []interface{}) ([]models.Task, error)
+	GetTaskByUserId(ctx context.Context,query string, params []interface{}) ([]models.Task, error)
 	InsertTask(newtask models.Task) error
 	DeleteTask(id int, userid int) (int64, error)
 	UpdateTask(userid, taskid int, name, status string) (int64, error)
@@ -23,7 +25,12 @@ func NewTaskRepository(db *sql.DB) *TaskRepository {
 	return &TaskRepository{db: db}
 }
 
-func (r *TaskRepository) GetTaskByUserId(query string, params []interface{}) ([]models.Task, error) {
+func (r *TaskRepository) GetTaskByUserId(ctx context.Context,query string, params []interface{}) ([]models.Task, error) {
+
+
+	 tracer := otel.Tracer("task-repo")
+	 ctx , span := tracer.Start(ctx,"get repo")
+	 defer span.End()
 
 	var tasklist []models.Task
 	rows, err := r.db.Query(query, params...)
