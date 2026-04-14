@@ -1,42 +1,17 @@
 package main
 
 import (
-	"context"
 	"go-sqlite/database"
 	"go-sqlite/handlers"
+	"go-sqlite/metrics"
+	"go-sqlite/observability"
 	"go-sqlite/repository"
 	"go-sqlite/routes"
 	"go-sqlite/services"
 	"log"
 	"net/http"
 	"os"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
-	"go.opentelemetry.io/otel/sdk/resource"
-	sdktrace "go.opentelemetry.io/otel/sdk/trace"
-	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
 )
-
-
-func InitTracer() func(context.Context) error {
-	ctx := context.Background()
-	exporter, err := otlptracehttp.New(ctx,
-		otlptracehttp.WithEndpoint("otel-connector:4317"),
-		otlptracehttp.WithInsecure(),
-	)
-	if err != nil {
-		log.Fatal(err)
-	}
-	tp := sdktrace.NewTracerProvider(
-		sdktrace.WithBatcher(exporter),
-		sdktrace.WithResource(resource.NewWithAttributes(
-			semconv.SchemaURL,
-			semconv.ServiceName("todo-app"),
-		)),
-	)
-	otel.SetTracerProvider(tp)
-	return tp.Shutdown
-}
 
 func main() {
 	file, err := os.OpenFile("app.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
@@ -60,10 +35,13 @@ func main() {
 	userservices := services.NewUserServices(repouser)
 	userhandler := handlers.NewUserHandler(userservices)
 
+	metrics.RegisterMetrics()
+
 	routes.SetupRoutes(taskhandler, userhandler, dbconn)
-	shutdown := InitTracer()
-	defer shutdown(context.Background())
-	
+
+	shutdown := observability.InitLogger()
+	defer shutdown()
+
 	log.Println("server running on port 8080")
 	http.ListenAndServe(":8080", nil)
 }

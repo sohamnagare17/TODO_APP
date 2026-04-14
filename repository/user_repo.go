@@ -50,14 +50,14 @@ func (repo *UserRepository) GetUserById(id int) (models.Users, error) {
 }
 
 func (repo *UserRepository) GetAllUsers(ctx context.Context) ([]models.Users, error) {
-	
-	tracer:=otel.Tracer("user-repository")
-	ctx,span:=tracer.Start(ctx,"DB: GetAllUsers")
+
+	tracer := otel.Tracer("user-repository")
+	ctx, span := tracer.Start(ctx, "DB: GetAllUsers")
 	defer span.End()
 
 	var userlist []models.Users
 	query := `SELECT * FROM users`
-	rows, err := repo.db.QueryContext(ctx,query)
+	rows, err := repo.db.QueryContext(ctx, query)
 	if err != nil {
 		span.RecordError(err)
 		log.Println("error in fetching the data from the database", err)

@@ -101,8 +101,8 @@ func (userserv *UserServices) GetUserById(idstr string) (models.Users, error) {
 
 func (userserv *UserServices) GetAllUsers(ctx context.Context) ([]models.Users, error) {
 
-	tracer:=otel.Tracer("user-services")
-	ctx,span:=tracer.Start(ctx,"GetAllUsersService")
+	tracer := otel.Tracer("user-services")
+	ctx, span := tracer.Start(ctx, "GetAllUsersService")
 	defer span.End()
 	return userserv.repo.GetAllUsers(ctx)
 }

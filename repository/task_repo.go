@@ -1,13 +1,14 @@
 package repository
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
+	"go-sqlite/metrics"
 	"go-sqlite/models"
+	"go.opentelemetry.io/otel"
 	"log"
 	"time"
-	"context"
-	"go.opentelemetry.io/otel"
 )
 
 type TaskRepository struct {
@@ -15,7 +16,7 @@ type TaskRepository struct {
 }
 
 type TaskRepo interface {
-	GetTaskByUserId(ctx context.Context,query string, params []interface{}) ([]models.Task, error)
+	GetTaskByUserId(ctx context.Context, query string, params []interface{}) ([]models.Task, error)
 	InsertTask(newtask models.Task) error
 	DeleteTask(id int, userid int) (int64, error)
 	UpdateTask(userid, taskid int, name, status string) (int64, error)
@@ -25,17 +26,21 @@ func NewTaskRepository(db *sql.DB) *TaskRepository {
 	return &TaskRepository{db: db}
 }
 
-func (r *TaskRepository) GetTaskByUserId(ctx context.Context,query string, params []interface{}) ([]models.Task, error) {
+func (r *TaskRepository) GetTaskByUserId(ctx context.Context, query string, params []interface{}) ([]models.Task, error) {
 
+	tracer := otel.Tracer("task-repo")
+	ctx, span := tracer.Start(ctx, "get repo")
+	defer span.End()
 
-	 tracer := otel.Tracer("task-repo")
-	 ctx , span := tracer.Start(ctx,"get repo")
-	 defer span.End()
-
+	start := time.Now()
 	var tasklist []models.Task
 	rows, err := r.db.Query(query, params...)
+
+	duration := time.Since(start).Seconds()
+
 	if err != nil {
 		log.Println("error in execution the query", err)
+		metrics.DBErrorsTotal.WithLabelValues("select", "tasks1").Inc()
 		return nil, err
 	}
 	for rows.Next() {
@@ -55,6 +60,7 @@ func (r *TaskRepository) GetTaskByUserId(ctx context.Context,query string, param
 		}
 		tasklist = append(tasklist, task)
 	}
+	metrics.DBQueryDuration.WithLabelValues("select", "tasks1").Observe(duration)
 	return tasklist, nil
 }
 
@@ -63,21 +69,27 @@ func (r *TaskRepository) InsertTask(newtask models.Task) error {
 	query := `INSERT INTO tasks1 (name ,status,userid,createdAt,updatedAt) VALUES(?,?,?,?,?)`
 
 	now := time.Now().UTC().Format(time.RFC3339)
+	start := time.Now()
 	_, err := r.db.Exec(query, newtask.Name, newtask.Status, newtask.UserId, now, now)
 
+	duration := time.Since(start).Seconds()
 	if err != nil {
 		log.Println("somthing went wrong to inserting the data ", err)
+		metrics.DBErrorsTotal.WithLabelValues("insert", "tasks1").Inc()
 		return err
 	}
+	metrics.DBQueryDuration.WithLabelValues("insert", "tasks1").Observe(duration)
 	return nil
 }
 
 func (r *TaskRepository) DeleteTask(id int, userid int) (int64, error) {
 	query := `DELETE FROM tasks1 WHERE userid=? AND id=?`
-
+	start := time.Now()
 	result, err := r.db.Exec(query, userid, id)
+	duration := time.Since(start).Seconds()
 	if err != nil {
 		log.Println("error while executing the database query", err)
+		metrics.DBErrorsTotal.WithLabelValues("delete", "tasks1").Inc()
 		return 0, err
 	}
 	rowsAffected, err := result.RowsAffected()
@@ -91,6 +103,7 @@ func (r *TaskRepository) DeleteTask(id int, userid int) (int64, error) {
 		log.Println("task not found ")
 		return 0, fmt.Errorf("task is not found")
 	}
+	metrics.DBQueryDuration.WithLabelValues("delete", "tasks1").Observe(duration)
 	return rowsAffected, nil
 }
 
@@ -99,7 +112,7 @@ func (r *TaskRepository) UpdateTask(userid, taskid int, name, status string) (in
 	var query string
 	var res sql.Result
 	var err error
-
+	start := time.Now()
 	switch {
 	case name != "" && status != "":
 		query = `UPDATE tasks1 
@@ -123,8 +136,10 @@ func (r *TaskRepository) UpdateTask(userid, taskid int, name, status string) (in
 		return 0, fmt.Errorf("nothing to update")
 	}
 
+	duration := time.Since(start).Seconds()
 	if err != nil {
 		log.Println("error updating task:", err)
+		metrics.DBErrorsTotal.WithLabelValues("update", "tasks1").Inc()
 		return 0, err
 	}
 
@@ -133,5 +148,6 @@ func (r *TaskRepository) UpdateTask(userid, taskid int, name, status string) (in
 		return 0, err
 	}
 
+	metrics.DBQueryDuration.WithLabelValues("update", "tasks1").Observe(duration)
 	return rows, nil
 }

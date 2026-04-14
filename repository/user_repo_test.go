@@ -74,7 +74,7 @@ func TestGetAllUsers_Success(t *testing.T) {
 	db := testutils.SetupTestDb()
 	defer db.Close()
 	repo := NewUserRepository(db)
-	ctx:=context.Background()
+	ctx := context.Background()
 	users, err := repo.GetAllUsers(ctx)
 	if err != nil {
 		t.Errorf("unexpected error %v", err)
@@ -95,7 +95,7 @@ func TestGetAllUsers_Empty(t *testing.T) {
 		t.Fatalf("failed to delete users: %v", err)
 	}
 	repo := NewUserRepository(db)
-	ctx:=context.Background()
+	ctx := context.Background()
 	users, err := repo.GetAllUsers(ctx)
 	if err != nil {
 		t.Errorf("unexpected error %v", err)

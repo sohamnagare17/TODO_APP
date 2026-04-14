@@ -97,8 +97,8 @@ func (handler *UserHandler) GetAllUsers(writer http.ResponseWriter, request *htt
 		return
 	}
 
-	tracer:=otel.Tracer("user-handler")
-	ctx,span:=tracer.Start(request.Context(),"GET /user")
+	tracer := otel.Tracer("user-handler")
+	ctx, span := tracer.Start(request.Context(), "GET /user")
 	defer span.End()
 
 	users, err := handler.service.GetAllUsers(ctx)

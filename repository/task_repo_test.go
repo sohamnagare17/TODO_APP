@@ -13,7 +13,7 @@ func TestInsertTask_Success(t *testing.T) {
 	err := repo.InsertTask(models.Task{
 		Name:   "New Task",
 		Status: "pending",
-		UserId: 1, 
+		UserId: 1,
 	})
 	if err != nil {
 		t.Errorf("unexpected error %v", err)
@@ -42,7 +42,7 @@ func TestInsertTask_Duplicate(t *testing.T) {
 		UserId: 1,
 	}
 	err := repo.InsertTask(task)
-	if err==nil{
+	if err == nil {
 		t.Errorf("Expected duplicate error")
 	}
 }
@@ -51,7 +51,7 @@ func TestInsertTask_EmptyFields(t *testing.T) {
 	defer db.Close()
 	repo := NewTaskRepository(db)
 	err := repo.InsertTask(models.Task{
-		Name:"",
+		Name:   "",
 		Status: "",
 		UserId: 1,
 	})
@@ -60,12 +60,11 @@ func TestInsertTask_EmptyFields(t *testing.T) {
 	}
 }
 
-
 func TestDeleteTask_Success(t *testing.T) {
 	db := testutils.SetupTestDb()
 	defer db.Close()
 	repo := NewTaskRepository(db)
-	rows, err := repo.DeleteTask(1, 1) 
+	rows, err := repo.DeleteTask(1, 1)
 	if err != nil {
 		t.Errorf("unexpected error %v", err)
 	}
@@ -77,7 +76,7 @@ func TestDeleteTask_NotFound(t *testing.T) {
 	db := testutils.SetupTestDb()
 	defer db.Close()
 	repo := NewTaskRepository(db)
-	_, err := repo.DeleteTask(999, 1) 
+	_, err := repo.DeleteTask(999, 1)
 	if err == nil {
 		t.Errorf("expected error when task not found")
 	}
@@ -123,7 +122,6 @@ func TestDeleteTask_TableNotExist(t *testing.T) {
 		t.Errorf("expected error when table does not exist")
 	}
 }
-
 
 func TestUpdateTask_BothFields(t *testing.T) {
 	db := testutils.SetupTestDb()

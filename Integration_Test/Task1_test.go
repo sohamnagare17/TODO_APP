@@ -31,7 +31,7 @@ func GetUserHandler(db *sql.DB) *handlers.UserHandler {
 	return handler
 }
 
-//insertTask
+// insertTask
 func TestInsertTask(t *testing.T) {
 	db := testutils.SetupTestDb()
 	handler := GetTaskHandler(db)
@@ -266,7 +266,7 @@ func TestDeleteTask_Nodata(t *testing.T) {
 
 }
 
-//GetUserById
+// GetUserById
 func TestGetUserById_Success(t *testing.T) {
 
 	db := testutils.SetupTestDb()
@@ -450,7 +450,7 @@ func TestGetAllUSers_success(t *testing.T) {
 
 }
 
-//UpdateTask
+// UpdateTask
 func TestUpdateTask_Success(t *testing.T) {
 
 	db := testutils.SetupTestDb()

@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"go-sqlite/models"
 	"go-sqlite/services"
+
 	"log"
 	"net/http"
 	"strconv"
+
 	"go.opentelemetry.io/otel"
-	
 )
 
 type TaskHandler struct {
@@ -21,10 +22,11 @@ func NewTaskHandler(service services.TaskService) *TaskHandler {
 
 func (h *TaskHandler) GetTaskByUserId(writer http.ResponseWriter, request *http.Request) {
 
+	tracer := otel.Tracer("task-handler")
+	ctx, span := tracer.Start(request.Context(), "gettaskuserbyid")
+	defer span.End()
 
-        tracer := otel.Tracer("task-handler")
-    ctx, span := tracer.Start(request.Context(), "gettaskuserbyid")
-    defer span.End()
+	// start := time.Now();
 
 	useridstr := request.PathValue("userid")
 	status := request.URL.Query().Get("status")
@@ -38,13 +40,18 @@ func (h *TaskHandler) GetTaskByUserId(writer http.ResponseWriter, request *http.
 		http.Error(writer, "missing userid", http.StatusBadRequest)
 		return
 	}
+	// Duration := time.Since(start).Seconds()
 
-	tasks, err := h.service.GetTaskByUserId(ctx,useridstr, status, sortby, order, cursor, limitstr, pagenostr)
+	tasks, err := h.service.GetTaskByUserId(ctx, useridstr, status, sortby, order, cursor, limitstr, pagenostr)
 	if err != nil {
 		log.Println("error in service function call", err)
 		http.Error(writer, err.Error(), http.StatusBadRequest)
+		//metrics.HttpErrorsTotal.WithLabelValues("Get","/users/{userid}/tasks").Inc()
 		return
 	}
+
+	//metrics.HttpRequestsTotal.WithLabelValues("Get","/users/{userid}/tasks","200").Inc()
+	//metrics.HttpRequestDuration.WithLabelValues("Get","/users/{userid}/tasks").Observe(Duration)
 
 	json.NewEncoder(writer).Encode(map[string]interface{}{
 		"message": "the tasks of the users are as follows",
