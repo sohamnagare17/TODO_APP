@@ -29,6 +29,7 @@ func NewUserServices(repo repository.UserRepo) *UserServices {
 }
 
 func (userserv *UserServices) InsertUser(newuser models.Users) error {
+	log.Println("NEWWWWWWWWWWWWWWW")
 	if newuser.Username == "" && newuser.Email == "" {
 
 		log.Println("username and email required ")
