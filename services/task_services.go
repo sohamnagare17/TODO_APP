@@ -7,6 +7,8 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"go.opentelemetry.io/otel"
+	"context"
 )
 
 var validfields = map[string]bool{
@@ -28,14 +30,21 @@ type TaskService interface {
 	InsertTask(task models.Task) error
 	DeleteTask(idstr string, useridstr string) error
 	UpdateTask(useridStr, taskidStr, name, status string) error
-	GetTaskByUserId(useridstr, status, sortby, order, cursor, limitstr, pagenostr string) ([]models.Task, error)
+	GetTaskByUserId(ctx context.Context,useridstr, status, sortby, order, cursor, limitstr, pagenostr string) ([]models.Task, error)
 }
 
 func NewTaskServices(repo repository.TaskRepo) *TaskServices {
 	return &TaskServices{repo: repo}
 }
 
-func (s *TaskServices) GetTaskByUserId(useridstr string, status string, sortby string, order string, cursor string, limitstr string, pagenostr string) ([]models.Task, error) {
+func (s *TaskServices) GetTaskByUserId(ctx context.Context,useridstr string, status string, sortby string, order string, cursor string, limitstr string, pagenostr string) ([]models.Task, error) {
+
+  tracer := otel.Tracer("task-service")
+  ctx,span := tracer.Start(ctx,"getservice")
+
+  defer span.End()
+
+
 
 	var err error
 	limit := 5
@@ -104,7 +113,7 @@ func (s *TaskServices) GetTaskByUserId(useridstr string, status string, sortby s
 	}
 	log.Println("Query:", query)
 	log.Println("Values:", parameters)
-	return s.repo.GetTaskByUserId(query, parameters)
+	return s.repo.GetTaskByUserId(ctx,query, parameters)
 }
 
 func (s *TaskServices) InsertTask(newtask models.Task) error {

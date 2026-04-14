@@ -7,6 +7,8 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"go.opentelemetry.io/otel"
+	
 )
 
 type TaskHandler struct {
@@ -18,6 +20,11 @@ func NewTaskHandler(service services.TaskService) *TaskHandler {
 }
 
 func (h *TaskHandler) GetTaskByUserId(writer http.ResponseWriter, request *http.Request) {
+
+
+        tracer := otel.Tracer("task-handler")
+    ctx, span := tracer.Start(request.Context(), "gettaskuserbyid")
+    defer span.End()
 
 	useridstr := request.PathValue("userid")
 	status := request.URL.Query().Get("status")
@@ -32,7 +39,7 @@ func (h *TaskHandler) GetTaskByUserId(writer http.ResponseWriter, request *http.
 		return
 	}
 
-	tasks, err := h.service.GetTaskByUserId(useridstr, status, sortby, order, cursor, limitstr, pagenostr)
+	tasks, err := h.service.GetTaskByUserId(ctx,useridstr, status, sortby, order, cursor, limitstr, pagenostr)
 	if err != nil {
 		log.Println("error in service function call", err)
 		http.Error(writer, err.Error(), http.StatusBadRequest)
