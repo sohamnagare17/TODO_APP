@@ -68,7 +68,7 @@ func (r *TaskRepository) InsertTask(newtask models.Task) error {
 
 	query := `INSERT INTO tasks1 (name ,status,userid,createdAt,updatedAt) VALUES(?,?,?,?,?)`
 
-	now := time.Now().UTC().Format(time.RFC3339)
+	now :=  time.Now().UTC().Format("2006-01-02 15:04:05")
 	start := time.Now()
 	_, err := r.db.Exec(query, newtask.Name, newtask.Status, newtask.UserId, now, now)
 

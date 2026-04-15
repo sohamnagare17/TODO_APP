@@ -2,51 +2,62 @@ package db
 
 import (
 	"database/sql"
-	_ "github.com/mattn/go-sqlite3"
 	"log"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 func Dbinit() *sql.DB {
-	db, err := sql.Open("sqlite3", "./test.db")
+
+		dsn := "root:root@tcp(localhost:3307)/todo?parseTime=true"
+
+	db, err := sql.Open("mysql", dsn)
 	if err != nil {
-		log.Println("here is err1")
+		log.Println("Error connecting to DB")
 		log.Fatal(err)
 	}
 
+	err = db.Ping()
+	if err != nil {
+		log.Println("DB not reachable")
+		log.Fatal(err)
+	}
+
+	// USERS TABLE
 	query1 := `CREATE TABLE IF NOT EXISTS users(
-	   user_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-	   username TEXT,
-	   email TEXT UNIQUE
+	   user_id INT AUTO_INCREMENT PRIMARY KEY,
+	   username VARCHAR(255),
+	   email VARCHAR(255) UNIQUE
 	);`
 
 	_, err = db.Exec(query1)
-
 	if err != nil {
-		log.Println("here is err12")
+		log.Println("Error creating users table")
 		log.Fatal(err)
 	}
 
-	query := `CREATE TABLE IF NOT EXISTS tasks1(
-	    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-		name TEXT ,
-		status TEXT,
-		userid INTEGER,
-		createdAt TEXT,
-		updatedAt TEXT,
+	// TASKS TABLE
+	query2 := `CREATE TABLE IF NOT EXISTS tasks1(
+	    id INT AUTO_INCREMENT PRIMARY KEY,
+		name VARCHAR(255),
+		status VARCHAR(50),
+		userid INT,
+		createdAt DATETIME,
+		updatedAt DATETIME,
 		FOREIGN KEY(userid) REFERENCES users(user_id)
 	);`
 
-	_, err = db.Exec(query)
-
+	_, err = db.Exec(query2)
 	if err != nil {
-		log.Println("here is err123")
+		log.Println("Error creating tasks table")
 		log.Fatal(err)
 	}
 
-	// db.Exec(`CREATE INDEX IF NOT EXISTS IDX ON tasks(id)`)
+	// UNIQUE INDEX
+	_, err = db.Exec(`CREATE UNIQUE INDEX singelrecords ON tasks1(name, status, userid);`)
+	if err != nil {
+		log.Println("Index may already exist:", err)
+	}
 
-	db.Exec(`CREATE UNIQUE INDEX singelrecords ON tasks1(name, status, userid);`)
-	db.Exec("PRAGMA foreign_keys = ON")
-	log.Println("table creates succesfully")
+	log.Println("✅ Tables created successfully")
 	return db
 }

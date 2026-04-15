@@ -4,10 +4,13 @@ import (
 	"context"
 	"fmt"
 	"go-sqlite/models"
+	"go-sqlite/Redis"
 	"go-sqlite/repository"
 	"go.opentelemetry.io/otel"
+	"github.com/redis/go-redis/v9"
 	"log"
 	"strconv"
+	"time"
 	"strings"
 )
 
@@ -24,6 +27,7 @@ var validstatus = map[string]bool{
 
 type TaskServices struct {
 	repo repository.TaskRepo
+	rdb  *redis.Client
 }
 
 type TaskService interface {
@@ -33,8 +37,11 @@ type TaskService interface {
 	GetTaskByUserId(ctx context.Context, useridstr, status, sortby, order, cursor, limitstr, pagenostr string) ([]models.Task, error)
 }
 
-func NewTaskServices(repo repository.TaskRepo) *TaskServices {
-	return &TaskServices{repo: repo}
+func NewTaskServices(repo repository.TaskRepo,rdb *redis.Client) *TaskServices {
+	return &TaskServices{
+		repo: repo,
+	    rdb : rdb ,     
+	}
 }
 
 func (s *TaskServices) GetTaskByUserId(ctx context.Context, useridstr string, status string, sortby string, order string, cursor string, limitstr string, pagenostr string) ([]models.Task, error) {
@@ -74,6 +81,25 @@ func (s *TaskServices) GetTaskByUserId(ctx context.Context, useridstr string, st
 		log.Println("id must be the number", err)
 		return nil, err
 	}
+
+   //here add cache logic 
+   
+	key := fmt.Sprintf(
+		"tasks:user:%d:status:%s:sort:%s:order:%s:cursor:%s:limit:%d:page:%d",
+		userid, status, sortby, order, cursor, limit, pageno,
+	)
+
+	var tasks []models.Task
+
+	
+	if Redis.GetCache(s.rdb, key, &tasks) {
+		log.Println("CACHE HIT ")
+		return tasks, nil
+	}
+
+	log.Println("CACHE MISS ❌ → DB hit")
+
+
 	query := `SELECT * FROM tasks1 WHERE userid=?`
 	parameters := []interface{}{userid}
 
@@ -111,7 +137,14 @@ func (s *TaskServices) GetTaskByUserId(ctx context.Context, useridstr string, st
 	}
 	log.Println("Query:", query)
 	log.Println("Values:", parameters)
-	return s.repo.GetTaskByUserId(ctx, query, parameters)
+	//return s.repo.GetTaskByUserId(ctx, query, parameters)
+	tasks,err = s.repo.GetTaskByUserId(ctx, query, parameters)
+	if err != nil{
+		return nil,err
+	}
+
+	Redis.SetCache(s.rdb, key, tasks, time.Minute*5)
+	return tasks,nil
 }
 
 func (s *TaskServices) InsertTask(newtask models.Task) error {

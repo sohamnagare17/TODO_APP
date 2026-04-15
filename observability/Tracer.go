@@ -15,7 +15,8 @@ func InitTracer() func() {
 	ctx := context.Background()
 
 	exporter, err := otlptracehttp.New(ctx,
-		otlptracehttp.WithEndpoint("otel-collector:4318"),
+		//otlptracehttp.WithEndpoint("otel-collector:4318"),
+		otlptracehttp.WithEndpoint("localhost:4318"),
 		otlptracehttp.WithInsecure(),
 	)
 	if err != nil {
