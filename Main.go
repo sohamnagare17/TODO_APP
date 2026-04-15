@@ -34,7 +34,7 @@ func main() {
 	taskhandler := handlers.NewTaskHandler(service)
 
 	repouser := repository.NewUserRepository(dbconn)
-	userservices := services.NewUserServices(repouser)
+	userservices := services.NewUserServices(repouser,rdb)
 	userhandler := handlers.NewUserHandler(userservices)
 
 	metrics.RegisterMetrics()

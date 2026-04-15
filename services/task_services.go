@@ -93,11 +93,11 @@ func (s *TaskServices) GetTaskByUserId(ctx context.Context, useridstr string, st
 
 	
 	if Redis.GetCache(s.rdb, key, &tasks) {
-		log.Println("CACHE HIT ")
+		log.Println("cache hit ")
 		return tasks, nil
 	}
 
-	log.Println("CACHE MISS ❌ → DB hit")
+	log.Println("cache miss  db hit")
 
 
 	query := `SELECT * FROM tasks1 WHERE userid=?`

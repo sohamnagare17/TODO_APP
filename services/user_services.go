@@ -6,9 +6,12 @@ import (
 	"fmt"
 	"go-sqlite/models"
 	"go-sqlite/repository"
+	"go-sqlite/Redis"
+	"github.com/redis/go-redis/v9"
 	"log"
 	"net/mail"
 	"strconv"
+	"time"
 	"strings"
 
 	"go.opentelemetry.io/otel"
@@ -16,6 +19,7 @@ import (
 
 type UserServices struct {
 	repo repository.UserRepo
+	rdb *redis.Client
 }
 
 type UserService interface {
@@ -24,8 +28,9 @@ type UserService interface {
 	GetAllUsers(context.Context) ([]models.Users, error)
 }
 
-func NewUserServices(repo repository.UserRepo) *UserServices {
-	return &UserServices{repo: repo}
+func NewUserServices(repo repository.UserRepo,rdb *redis.Client) *UserServices {
+	return &UserServices{repo: repo,
+	rdb:rdb,}
 }
 
 func (userserv *UserServices) InsertUser(newuser models.Users) error {
@@ -83,18 +88,29 @@ func (userserv *UserServices) GetUserById(idstr string) (models.Users, error) {
 		//http.Error(writer,"Id must be Number",400)
 		return user, err
 	}
+
+	key := fmt.Sprintf("user:%d",id)
+
 	if id <= 0 {
 
 		log.Println(" Enter a positive number for the UserId")
 		return user, fmt.Errorf("invalid user id ")
 	}
 
+	if Redis.GetCache(userserv.rdb,key,&user){
+		log.Println("cache hit")
+		return user , nil
+	}
+
+	log.Println("cache miss")
 	user, err = userserv.repo.GetUserById(id)
 	log.Println(user.Userid)
 	if err != nil {
 		log.Println("error in fetching the user in service function", err)
 		return user, err
 	}
+
+	Redis.SetCache(userserv.rdb,key,user,time.Minute*5)
 	return user, nil
 }
 
@@ -103,5 +119,21 @@ func (userserv *UserServices) GetAllUsers(ctx context.Context) ([]models.Users, 
 	tracer := otel.Tracer("user-services")
 	ctx, span := tracer.Start(ctx, "GetAllUsersService")
 	defer span.End()
-	return userserv.repo.GetAllUsers(ctx)
+
+	key := "users:All"
+
+	var users []models.Users
+
+	if Redis.GetCache(userserv.rdb, key , &users){
+		log.Println("cache hit")
+		return users ,nil
+	}
+	
+	log.Println("cache missed then hit db")
+	users,err := userserv.repo.GetAllUsers(ctx)
+	if err != nil{
+		return nil,err
+	}
+	Redis.SetCache(userserv.rdb,key,users,time.Minute*5)
+	return users,nil
 }
