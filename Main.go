@@ -41,7 +41,7 @@ func main() {
 
 	routes.SetupRoutes(taskhandler, userhandler, dbconn)
 
-	shutdown := observability.InitTracer()
+	shutdown := observability.InitLogger()
 	defer shutdown()
 
 	log.Println("server running on port 8080")
