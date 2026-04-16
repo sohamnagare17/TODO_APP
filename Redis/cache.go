@@ -33,3 +33,29 @@ func InitRedis() *redis.Client {
 
 	return rdb
 }
+
+func DeleteByPattern(ctx context.Context, rdb *redis.Client, pattern string) error {
+
+	var cursor uint64
+
+	for {
+		keys, nextCursor, err := rdb.Scan(ctx, cursor, pattern, 10).Result()
+		if err != nil {
+			return err
+		}
+
+		for _, key := range keys {
+			err := rdb.Del(ctx, key).Err()
+			if err != nil {
+				return err
+			}
+		}
+
+		cursor = nextCursor
+		if cursor == 0 {
+			break
+		}
+	}
+
+	return nil
+}

@@ -31,9 +31,9 @@ type TaskServices struct {
 }
 
 type TaskService interface {
-	InsertTask(task models.Task) error
-	DeleteTask(idstr string, useridstr string) error
-	UpdateTask(useridStr, taskidStr, name, status string) error
+	InsertTask(ctx context.Context,task models.Task) error
+	DeleteTask(ctx context.Context, idstr string, useridstr string) error
+	UpdateTask(ctx context.Context, useridStr, taskidStr, name, status string) error
 	GetTaskByUserId(ctx context.Context, useridstr, status, sortby, order, cursor, limitstr, pagenostr string) ([]models.Task, error)
 }
 
@@ -48,7 +48,6 @@ func (s *TaskServices) GetTaskByUserId(ctx context.Context, useridstr string, st
 
 	tracer := otel.Tracer("task-service")
 	ctx, span := tracer.Start(ctx, "getservice")
-
 	defer span.End()
 
 	var err error
@@ -147,7 +146,12 @@ func (s *TaskServices) GetTaskByUserId(ctx context.Context, useridstr string, st
 	return tasks,nil
 }
 
-func (s *TaskServices) InsertTask(newtask models.Task) error {
+func (s *TaskServices) InsertTask(ctx context.Context, newtask models.Task) error {
+
+    tracer := otel.Tracer("task-service")
+	ctx, span := tracer.Start(ctx, "Inserttask")
+	defer span.End()
+
 
 	log.Println(newtask.UserId)
 	newtask.Name = strings.TrimSpace(newtask.Name)
@@ -165,14 +169,18 @@ func (s *TaskServices) InsertTask(newtask models.Task) error {
 		log.Println("Invalid status(done/pending only allowed)")
 		return fmt.Errorf("invalid status ")
 	}
-	return s.repo.InsertTask(newtask)
+	return s.repo.InsertTask(ctx,newtask)
 }
 
-func (s *TaskServices) DeleteTask(idstr string, useridstr string) error {
+func (s *TaskServices) DeleteTask(ctx context.Context, idstr string, useridstr string) error {
 	if idstr == "" || useridstr == "" {
 		log.Println("userid and taskid  required plz provide ids")
 		return fmt.Errorf("userid and taskid requried")
 	}
+
+		tracer := otel.Tracer("task-service")
+	ctx, span := tracer.Start(ctx, "deleteTask")
+	defer span.End()
 
 	id, err := strconv.Atoi(idstr)
 	if err != nil {
@@ -186,7 +194,17 @@ func (s *TaskServices) DeleteTask(idstr string, useridstr string) error {
 		return err1
 	}
 
-	rows, err := s.repo.DeleteTask(id, userid)
+	pattern := fmt.Sprintf("tasks:user:%d:*", userid)
+   rediserr:= Redis.DeleteByPattern(ctx, s.rdb, pattern)
+     
+    if rediserr!=nil{
+		log.Println("error in deleting the data from the cache")
+		return rediserr
+	}
+
+
+
+	rows, err := s.repo.DeleteTask(ctx,id, userid)
 	if err != nil {
 		log.Println("error while executing the database query", err)
 		return err
@@ -198,11 +216,15 @@ func (s *TaskServices) DeleteTask(idstr string, useridstr string) error {
 
 }
 
-func (s *TaskServices) UpdateTask(useridStr, taskidStr, name, status string) error {
+func (s *TaskServices) UpdateTask(ctx context.Context, useridStr, taskidStr, name, status string) error {
 
 	if useridStr == "" || taskidStr == "" {
 		return fmt.Errorf("userid and taskid required")
 	}
+
+	tracer := otel.Tracer("Task-services")
+	ctx,span := tracer.Start(ctx,"updateTask")
+	defer span.End()
 
 	uid, err := strconv.Atoi(useridStr)
 	if err != nil || uid <= 0 {
@@ -222,7 +244,7 @@ func (s *TaskServices) UpdateTask(useridStr, taskidStr, name, status string) err
 		return fmt.Errorf("nothing to update")
 	}
 
-	rows, err := s.repo.UpdateTask(uid, tid, name, status)
+	rows, err := s.repo.UpdateTask(ctx,uid, tid, name, status)
 	if err != nil {
 		return err
 	}
