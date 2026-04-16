@@ -169,6 +169,15 @@ func (s *TaskServices) InsertTask(ctx context.Context, newtask models.Task) erro
 		log.Println("Invalid status(done/pending only allowed)")
 		return fmt.Errorf("invalid status ")
 	}
+    
+	 pattern := fmt.Sprintf("tasks:user:%d:*",newtask.UserId)
+	 rediserr := Redis.DeleteByPattern(ctx,s.rdb,pattern)
+
+	  if rediserr!=nil{
+		log.Println("error in deleting the data from the cache")
+		return rediserr
+	}
+
 	return s.repo.InsertTask(ctx,newtask)
 }
 
@@ -194,16 +203,6 @@ func (s *TaskServices) DeleteTask(ctx context.Context, idstr string, useridstr s
 		return err1
 	}
 
-	pattern := fmt.Sprintf("tasks:user:%d:*", userid)
-   rediserr:= Redis.DeleteByPattern(ctx, s.rdb, pattern)
-     
-    if rediserr!=nil{
-		log.Println("error in deleting the data from the cache")
-		return rediserr
-	}
-
-
-
 	rows, err := s.repo.DeleteTask(ctx,id, userid)
 	if err != nil {
 		log.Println("error while executing the database query", err)
@@ -212,6 +211,15 @@ func (s *TaskServices) DeleteTask(ctx context.Context, idstr string, useridstr s
 	if rows == 0 {
 		return fmt.Errorf("Task not found")
 	}
+
+	pattern := fmt.Sprintf("tasks:user:%d:*", userid)
+     rediserr:= Redis.DeleteByPattern(ctx, s.rdb, pattern)
+     
+    if rediserr!=nil{
+		log.Println("error in deleting the data from the cache")
+		return rediserr
+	}
+
 	return nil
 
 }
@@ -251,6 +259,14 @@ func (s *TaskServices) UpdateTask(ctx context.Context, useridStr, taskidStr, nam
 
 	if rows == 0 {
 		return fmt.Errorf("task not found")
+	}
+
+	pattern := fmt.Sprintf("tasks:user:%d:*",uid)
+	rediserr := Redis.DeleteByPattern(ctx,s.rdb,pattern)
+
+	if rediserr!=nil{
+		log.Println("error in cache deleting in updatetask")
+		return rediserr
 	}
 
 	return nil
