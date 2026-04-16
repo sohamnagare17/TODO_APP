@@ -2,13 +2,13 @@ package db
 
 import (
 	"database/sql"
-	"log"
 	_ "github.com/go-sql-driver/mysql"
+	"log"
 )
 
 func Dbinit() *sql.DB {
 
-		dsn := "root:root@tcp(localhost:3307)/todo?parseTime=true"
+	dsn := "root:root@tcp(localhost:3307)/todo?parseTime=true"
 
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {

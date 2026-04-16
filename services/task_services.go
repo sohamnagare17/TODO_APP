@@ -3,15 +3,15 @@ package services
 import (
 	"context"
 	"fmt"
-	"go-sqlite/models"
+	"github.com/redis/go-redis/v9"
 	"go-sqlite/Redis"
+	"go-sqlite/models"
 	"go-sqlite/repository"
 	"go.opentelemetry.io/otel"
-	"github.com/redis/go-redis/v9"
 	"log"
 	"strconv"
-	"time"
 	"strings"
+	"time"
 )
 
 var validfields = map[string]bool{
@@ -31,16 +31,16 @@ type TaskServices struct {
 }
 
 type TaskService interface {
-	InsertTask(ctx context.Context,task models.Task) error
+	InsertTask(ctx context.Context, task models.Task) error
 	DeleteTask(ctx context.Context, idstr string, useridstr string) error
 	UpdateTask(ctx context.Context, useridStr, taskidStr, name, status string) error
 	GetTaskByUserId(ctx context.Context, useridstr, status, sortby, order, cursor, limitstr, pagenostr string) ([]models.Task, error)
 }
 
-func NewTaskServices(repo repository.TaskRepo,rdb *redis.Client) *TaskServices {
+func NewTaskServices(repo repository.TaskRepo, rdb *redis.Client) *TaskServices {
 	return &TaskServices{
 		repo: repo,
-	    rdb : rdb ,     
+		rdb:  rdb,
 	}
 }
 
@@ -81,8 +81,8 @@ func (s *TaskServices) GetTaskByUserId(ctx context.Context, useridstr string, st
 		return nil, err
 	}
 
-   //here add cache logic 
-   
+	//here add cache logic
+
 	key := fmt.Sprintf(
 		"tasks:user:%d:status:%s:sort:%s:order:%s:cursor:%s:limit:%d:page:%d",
 		userid, status, sortby, order, cursor, limit, pageno,
@@ -90,14 +90,12 @@ func (s *TaskServices) GetTaskByUserId(ctx context.Context, useridstr string, st
 
 	var tasks []models.Task
 
-	
 	if Redis.GetCache(s.rdb, key, &tasks) {
 		log.Println("cache hit ")
 		return tasks, nil
 	}
 
 	log.Println("cache miss  db hit")
-
 
 	query := `SELECT * FROM tasks1 WHERE userid=?`
 	parameters := []interface{}{userid}
@@ -137,21 +135,20 @@ func (s *TaskServices) GetTaskByUserId(ctx context.Context, useridstr string, st
 	log.Println("Query:", query)
 	log.Println("Values:", parameters)
 	//return s.repo.GetTaskByUserId(ctx, query, parameters)
-	tasks,err = s.repo.GetTaskByUserId(ctx, query, parameters)
-	if err != nil{
-		return nil,err
+	tasks, err = s.repo.GetTaskByUserId(ctx, query, parameters)
+	if err != nil {
+		return nil, err
 	}
 
 	Redis.SetCache(s.rdb, key, tasks, time.Minute*5)
-	return tasks,nil
+	return tasks, nil
 }
 
 func (s *TaskServices) InsertTask(ctx context.Context, newtask models.Task) error {
 
-    tracer := otel.Tracer("task-service")
+	tracer := otel.Tracer("task-service")
 	ctx, span := tracer.Start(ctx, "Inserttask")
 	defer span.End()
-
 
 	log.Println(newtask.UserId)
 	newtask.Name = strings.TrimSpace(newtask.Name)
@@ -169,16 +166,16 @@ func (s *TaskServices) InsertTask(ctx context.Context, newtask models.Task) erro
 		log.Println("Invalid status(done/pending only allowed)")
 		return fmt.Errorf("invalid status ")
 	}
-    
-	 pattern := fmt.Sprintf("tasks:user:%d:*",newtask.UserId)
-	 rediserr := Redis.DeleteByPattern(ctx,s.rdb,pattern)
 
-	  if rediserr!=nil{
+	pattern := fmt.Sprintf("tasks:user:%d:*", newtask.UserId)
+	rediserr := Redis.DeleteByPattern(ctx, s.rdb, pattern)
+
+	if rediserr != nil {
 		log.Println("error in deleting the data from the cache")
 		return rediserr
 	}
 
-	return s.repo.InsertTask(ctx,newtask)
+	return s.repo.InsertTask(ctx, newtask)
 }
 
 func (s *TaskServices) DeleteTask(ctx context.Context, idstr string, useridstr string) error {
@@ -187,7 +184,7 @@ func (s *TaskServices) DeleteTask(ctx context.Context, idstr string, useridstr s
 		return fmt.Errorf("userid and taskid requried")
 	}
 
-		tracer := otel.Tracer("task-service")
+	tracer := otel.Tracer("task-service")
 	ctx, span := tracer.Start(ctx, "deleteTask")
 	defer span.End()
 
@@ -203,7 +200,7 @@ func (s *TaskServices) DeleteTask(ctx context.Context, idstr string, useridstr s
 		return err1
 	}
 
-	rows, err := s.repo.DeleteTask(ctx,id, userid)
+	rows, err := s.repo.DeleteTask(ctx, id, userid)
 	if err != nil {
 		log.Println("error while executing the database query", err)
 		return err
@@ -213,9 +210,9 @@ func (s *TaskServices) DeleteTask(ctx context.Context, idstr string, useridstr s
 	}
 
 	pattern := fmt.Sprintf("tasks:user:%d:*", userid)
-     rediserr:= Redis.DeleteByPattern(ctx, s.rdb, pattern)
-     
-    if rediserr!=nil{
+	rediserr := Redis.DeleteByPattern(ctx, s.rdb, pattern)
+
+	if rediserr != nil {
 		log.Println("error in deleting the data from the cache")
 		return rediserr
 	}
@@ -231,7 +228,7 @@ func (s *TaskServices) UpdateTask(ctx context.Context, useridStr, taskidStr, nam
 	}
 
 	tracer := otel.Tracer("Task-services")
-	ctx,span := tracer.Start(ctx,"updateTask")
+	ctx, span := tracer.Start(ctx, "updateTask")
 	defer span.End()
 
 	uid, err := strconv.Atoi(useridStr)
@@ -252,7 +249,7 @@ func (s *TaskServices) UpdateTask(ctx context.Context, useridStr, taskidStr, nam
 		return fmt.Errorf("nothing to update")
 	}
 
-	rows, err := s.repo.UpdateTask(ctx,uid, tid, name, status)
+	rows, err := s.repo.UpdateTask(ctx, uid, tid, name, status)
 	if err != nil {
 		return err
 	}
@@ -261,10 +258,10 @@ func (s *TaskServices) UpdateTask(ctx context.Context, useridStr, taskidStr, nam
 		return fmt.Errorf("task not found")
 	}
 
-	pattern := fmt.Sprintf("tasks:user:%d:*",uid)
-	rediserr := Redis.DeleteByPattern(ctx,s.rdb,pattern)
+	pattern := fmt.Sprintf("tasks:user:%d:*", uid)
+	rediserr := Redis.DeleteByPattern(ctx, s.rdb, pattern)
 
-	if rediserr!=nil{
+	if rediserr != nil {
 		log.Println("error in cache deleting in updatetask")
 		return rediserr
 	}

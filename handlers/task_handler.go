@@ -67,7 +67,6 @@ func (h *TaskHandler) InsertTask(writer http.ResponseWriter, request *http.Reque
 		return
 	}
 
-
 	tracer := otel.Tracer("task-handler")
 	ctx, span := tracer.Start(request.Context(), "InsertTask")
 	defer span.End()
@@ -102,7 +101,7 @@ func (h *TaskHandler) InsertTask(writer http.ResponseWriter, request *http.Reque
 		return
 	}
 	newtask.UserId = userID
-	err = h.service.InsertTask(ctx ,newtask)
+	err = h.service.InsertTask(ctx, newtask)
 	if err != nil {
 		log.Println("error in service function calling ")
 		http.Error(writer, "Invalid body or empty body", http.StatusInternalServerError)
@@ -120,12 +119,9 @@ func (h *TaskHandler) DeleteTask(writer http.ResponseWriter, request *http.Reque
 	useridstr := request.PathValue("userid")
 	// ctx := request.Context()
 
-
-	
 	tracer := otel.Tracer("task-handler")
 	ctx, span := tracer.Start(request.Context(), "deleteTask")
 	defer span.End()
-
 
 	if idstr == "" || useridstr == "" {
 		http.Error(writer, "missing id", http.StatusBadRequest)
@@ -143,7 +139,7 @@ func (h *TaskHandler) DeleteTask(writer http.ResponseWriter, request *http.Reque
 		return
 	}
 
-	err = h.service.DeleteTask(ctx,idstr, useridstr)
+	err = h.service.DeleteTask(ctx, idstr, useridstr)
 	if err != nil {
 		log.Println("error in passing the data to the services", err)
 		http.Error(writer, "invalid parameters", http.StatusInternalServerError)
@@ -165,7 +161,7 @@ func (h *TaskHandler) UpdateTask(writer http.ResponseWriter, request *http.Reque
 	}
 
 	tracer := otel.Tracer("Task-Handler")
-	ctx,span := tracer.Start(request.Context(),"updateTask")
+	ctx, span := tracer.Start(request.Context(), "updateTask")
 	defer span.End()
 
 	userid := request.PathValue("userid")

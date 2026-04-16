@@ -17,9 +17,9 @@ type TaskRepository struct {
 
 type TaskRepo interface {
 	GetTaskByUserId(ctx context.Context, query string, params []interface{}) ([]models.Task, error)
-	InsertTask(ctx context.Context,newtask models.Task) error
-	DeleteTask(ctx context.Context,id int, userid int) (int64, error)
-	UpdateTask(ctx context.Context,userid, taskid int, name, status string) (int64, error)
+	InsertTask(ctx context.Context, newtask models.Task) error
+	DeleteTask(ctx context.Context, id int, userid int) (int64, error)
+	UpdateTask(ctx context.Context, userid, taskid int, name, status string) (int64, error)
 }
 
 func NewTaskRepository(db *sql.DB) *TaskRepository {
@@ -64,7 +64,7 @@ func (r *TaskRepository) GetTaskByUserId(ctx context.Context, query string, para
 	return tasklist, nil
 }
 
-func (r *TaskRepository) InsertTask(ctx context.Context,newtask models.Task) error {
+func (r *TaskRepository) InsertTask(ctx context.Context, newtask models.Task) error {
 
 	query := `INSERT INTO tasks1 (name ,status,userid,createdAt,updatedAt) VALUES(?,?,?,?,?)`
 
@@ -72,7 +72,7 @@ func (r *TaskRepository) InsertTask(ctx context.Context,newtask models.Task) err
 	ctx, span := tracer.Start(ctx, "get repo")
 	defer span.End()
 
-	now :=  time.Now().UTC().Format("2006-01-02 15:04:05")
+	now := time.Now().UTC().Format("2006-01-02 15:04:05")
 	start := time.Now()
 	_, err := r.db.Exec(query, newtask.Name, newtask.Status, newtask.UserId, now, now)
 
@@ -86,11 +86,10 @@ func (r *TaskRepository) InsertTask(ctx context.Context,newtask models.Task) err
 	return nil
 }
 
-func (r *TaskRepository) DeleteTask(ctx context.Context,id int, userid int) (int64, error) {
+func (r *TaskRepository) DeleteTask(ctx context.Context, id int, userid int) (int64, error) {
 	query := `DELETE FROM tasks1 WHERE userid=? AND id=?`
 	start := time.Now()
 
-	
 	tracer := otel.Tracer("task-repo")
 	ctx, span := tracer.Start(ctx, "deleteTask")
 	defer span.End()
@@ -117,7 +116,7 @@ func (r *TaskRepository) DeleteTask(ctx context.Context,id int, userid int) (int
 	return rowsAffected, nil
 }
 
-func (r *TaskRepository) UpdateTask(ctx context.Context,userid, taskid int, name, status string) (int64, error) {
+func (r *TaskRepository) UpdateTask(ctx context.Context, userid, taskid int, name, status string) (int64, error) {
 
 	var query string
 	var res sql.Result
@@ -125,7 +124,7 @@ func (r *TaskRepository) UpdateTask(ctx context.Context,userid, taskid int, name
 	start := time.Now()
 
 	tracer := otel.Tracer("Task-Repo")
-	ctx,span := tracer.Start(ctx,"updateTask")
+	ctx, span := tracer.Start(ctx, "updateTask")
 	defer span.End()
 	switch {
 	case name != "" && status != "":

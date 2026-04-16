@@ -1,14 +1,14 @@
 package main
 
 import (
-	 "go-sqlite/database"
+	"go-sqlite/Redis"
+	"go-sqlite/database"
 	"go-sqlite/handlers"
 	"go-sqlite/metrics"
 	"go-sqlite/observability"
 	"go-sqlite/repository"
 	"go-sqlite/routes"
 	"go-sqlite/services"
-	"go-sqlite/Redis"
 	"log"
 	"net/http"
 	"os"
@@ -30,11 +30,11 @@ func main() {
 	rdb := Redis.InitRedis()
 
 	repo := repository.NewTaskRepository(dbconn)
-	service := services.NewTaskServices(repo,rdb)
+	service := services.NewTaskServices(repo, rdb)
 	taskhandler := handlers.NewTaskHandler(service)
 
 	repouser := repository.NewUserRepository(dbconn)
-	userservices := services.NewUserServices(repouser,rdb)
+	userservices := services.NewUserServices(repouser, rdb)
 	userhandler := handlers.NewUserHandler(userservices)
 
 	metrics.RegisterMetrics()

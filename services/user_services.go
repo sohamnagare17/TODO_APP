@@ -4,22 +4,22 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/redis/go-redis/v9"
+	"go-sqlite/Redis"
 	"go-sqlite/models"
 	"go-sqlite/repository"
-	"go-sqlite/Redis"
-	"github.com/redis/go-redis/v9"
 	"log"
 	"net/mail"
 	"strconv"
-	"time"
 	"strings"
+	"time"
 
 	"go.opentelemetry.io/otel"
 )
 
 type UserServices struct {
 	repo repository.UserRepo
-	rdb *redis.Client
+	rdb  *redis.Client
 }
 
 type UserService interface {
@@ -28,9 +28,9 @@ type UserService interface {
 	GetAllUsers(context.Context) ([]models.Users, error)
 }
 
-func NewUserServices(repo repository.UserRepo,rdb *redis.Client) *UserServices {
+func NewUserServices(repo repository.UserRepo, rdb *redis.Client) *UserServices {
 	return &UserServices{repo: repo,
-	rdb:rdb,}
+		rdb: rdb}
 }
 
 func (userserv *UserServices) InsertUser(newuser models.Users) error {
@@ -89,7 +89,7 @@ func (userserv *UserServices) GetUserById(idstr string) (models.Users, error) {
 		return user, err
 	}
 
-	key := fmt.Sprintf("user:%d",id)
+	key := fmt.Sprintf("user:%d", id)
 
 	if id <= 0 {
 
@@ -97,9 +97,9 @@ func (userserv *UserServices) GetUserById(idstr string) (models.Users, error) {
 		return user, fmt.Errorf("invalid user id ")
 	}
 
-	if Redis.GetCache(userserv.rdb,key,&user){
+	if Redis.GetCache(userserv.rdb, key, &user) {
 		log.Println("cache hit")
-		return user , nil
+		return user, nil
 	}
 
 	log.Println("cache miss")
@@ -110,7 +110,7 @@ func (userserv *UserServices) GetUserById(idstr string) (models.Users, error) {
 		return user, err
 	}
 
-	Redis.SetCache(userserv.rdb,key,user,time.Minute*5)
+	Redis.SetCache(userserv.rdb, key, user, time.Minute*5)
 	return user, nil
 }
 
@@ -124,16 +124,16 @@ func (userserv *UserServices) GetAllUsers(ctx context.Context) ([]models.Users, 
 
 	var users []models.Users
 
-	if Redis.GetCache(userserv.rdb, key , &users){
+	if Redis.GetCache(userserv.rdb, key, &users) {
 		log.Println("cache hit")
-		return users ,nil
+		return users, nil
 	}
-	
+
 	log.Println("cache missed then hit db")
-	users,err := userserv.repo.GetAllUsers(ctx)
-	if err != nil{
-		return nil,err
+	users, err := userserv.repo.GetAllUsers(ctx)
+	if err != nil {
+		return nil, err
 	}
-	Redis.SetCache(userserv.rdb,key,users,time.Minute*5)
-	return users,nil
+	Redis.SetCache(userserv.rdb, key, users, time.Minute*5)
+	return users, nil
 }
